@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Plus, CheckCircle, Clock, Timer } from 'lucide-react';
 import { overtimeRecords } from '../data/mockData';
+import { useToast } from '../components/Toast';
 
 export default function Overtime() {
+  const { showToast } = useToast();
   const [filterStatus, setFilterStatus] = useState('');
 
   const filtered = overtimeRecords.filter(r => !filterStatus || r.status === filterStatus);
@@ -116,8 +118,18 @@ export default function Overtime() {
                   <td className="px-4 py-3">
                     {record.status === 'Pending' ? (
                       <div className="flex gap-1">
-                        <button className="px-2 py-1 text-xs bg-emerald-500 text-white rounded hover:bg-emerald-600">Approve</button>
-                        <button className="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600">Reject</button>
+                        <button
+                          onClick={() => showToast('success', 'Lembur Disetujui', `${record.employeeName} - ${record.hours} jam`)}
+                          className="px-2 py-1 text-xs bg-emerald-500 text-white rounded hover:bg-emerald-600 transition"
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => showToast('error', 'Lembur Ditolak', `${record.employeeName} - ${record.hours} jam`)}
+                          className="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition"
+                        >
+                          Reject
+                        </button>
                       </div>
                     ) : '-'}
                   </td>

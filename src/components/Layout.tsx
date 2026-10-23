@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   Users,
@@ -16,8 +16,10 @@ import {
   LogOut,
   Menu,
   X,
-  ChevronDown,
+  Moon,
+  Sun,
 } from 'lucide-react';
+import { useToast } from './Toast';
 
 const menuItems = [
   { path: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -36,7 +38,23 @@ const menuItems = [
 ];
 
 export default function Layout() {
+  const navigate = useNavigate();
+  const { showToast } = useToast();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
+
+  const handleLogout = () => {
+    localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('user');
+    showToast('info', 'Logout Berhasil', 'Anda telah keluar dari sistem');
+    navigate('/login');
+  };
+
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
+    document.documentElement.classList.toggle('dark');
+    showToast('info', 'Tema Berubah', darkMode ? 'Mode terang aktif' : 'Mode gelap aktif');
+  };
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -101,7 +119,11 @@ export default function Layout() {
               <p className="text-sm text-white font-medium truncate">Admin HRD</p>
               <p className="text-xs text-slate-400 truncate">admin@mrvapor.com</p>
             </div>
-            <button className="text-slate-400 hover:text-white">
+            <button
+              onClick={handleLogout}
+              className="text-slate-400 hover:text-white transition"
+              title="Logout"
+            >
               <LogOut size={16} />
             </button>
           </div>
@@ -129,8 +151,18 @@ export default function Layout() {
               <Calendar size={14} />
               <span>{new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
             </div>
+            <button
+              onClick={toggleDarkMode}
+              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition"
+              title={darkMode ? 'Mode Terang' : 'Mode Gelap'}
+            >
+              {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
             <div className="relative">
-              <button className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg">
+              <button
+                onClick={() => showToast('info', 'Notifikasi', 'Anda memiliki 3 notifikasi baru')}
+                className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition"
+              >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>

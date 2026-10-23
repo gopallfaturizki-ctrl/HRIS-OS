@@ -1,5 +1,7 @@
-import { HashRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { ToastProvider } from './components/Toast';
 import Layout from './components/Layout';
+import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Employees from './pages/Employees';
 import Attendance from './pages/Attendance';
@@ -14,27 +16,45 @@ import Discipline from './pages/Discipline';
 import Contracts from './pages/Contracts';
 import Resign from './pages/Resign';
 
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  return <>{children}</>;
+}
+
 function App() {
   return (
-    <HashRouter>
-      <Routes>
-        <Route path="/" element={<Layout />}>
-          <Route index element={<Dashboard />} />
-          <Route path="employees" element={<Employees />} />
-          <Route path="attendance" element={<Attendance />} />
-          <Route path="shifts" element={<Shifts />} />
-          <Route path="leave" element={<Leave />} />
-          <Route path="overtime" element={<Overtime />} />
-          <Route path="payroll" element={<Payroll />} />
-          <Route path="recruitment" element={<Recruitment />} />
-          <Route path="performance" element={<Performance />} />
-          <Route path="training" element={<Training />} />
-          <Route path="discipline" element={<Discipline />} />
-          <Route path="contracts" element={<Contracts />} />
-          <Route path="resign" element={<Resign />} />
-        </Route>
-      </Routes>
-    </HashRouter>
+    <ToastProvider>
+      <HashRouter>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <Layout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<Dashboard />} />
+            <Route path="employees" element={<Employees />} />
+            <Route path="attendance" element={<Attendance />} />
+            <Route path="shifts" element={<Shifts />} />
+            <Route path="leave" element={<Leave />} />
+            <Route path="overtime" element={<Overtime />} />
+            <Route path="payroll" element={<Payroll />} />
+            <Route path="recruitment" element={<Recruitment />} />
+            <Route path="performance" element={<Performance />} />
+            <Route path="training" element={<Training />} />
+            <Route path="discipline" element={<Discipline />} />
+            <Route path="contracts" element={<Contracts />} />
+            <Route path="resign" element={<Resign />} />
+          </Route>
+        </Routes>
+      </HashRouter>
+    </ToastProvider>
   );
 }
 

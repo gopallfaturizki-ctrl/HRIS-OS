@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Search, Plus, CheckCircle, XCircle, Clock, Calendar } from 'lucide-react';
 import { leaveRequests } from '../data/mockData';
+import { useToast } from '../components/Toast';
 
 export default function Leave() {
+  const { showToast } = useToast();
   const [filterStatus, setFilterStatus] = useState('');
   const [filterType, setFilterType] = useState('');
 
@@ -39,7 +41,10 @@ export default function Leave() {
           <h1 className="text-xl font-bold text-gray-800">Cuti & Izin</h1>
           <p className="text-sm text-gray-500">Kelola pengajuan cuti dan izin karyawan</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">
+        <button
+          onClick={() => showToast('info', 'Form Pengajuan Cuti', 'Fitur form pengajuan cuti akan segera tersedia')}
+          className="flex items-center gap-2 px-4 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition"
+        >
           <Plus size={16} /> Ajukan Cuti
         </button>
       </div>
@@ -149,8 +154,18 @@ export default function Leave() {
                   <td className="px-4 py-3">
                     {leave.status === 'Pending' ? (
                       <div className="flex gap-1">
-                        <button className="px-2 py-1 text-xs bg-emerald-500 text-white rounded hover:bg-emerald-600">✓</button>
-                        <button className="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600">✗</button>
+                        <button
+                          onClick={() => showToast('success', 'Cuti Disetujui', `${leave.employeeName} - ${leave.type} (${leave.days} hari)`)}
+                          className="px-2 py-1 text-xs bg-emerald-500 text-white rounded hover:bg-emerald-600 transition"
+                        >
+                          ✓ Approve
+                        </button>
+                        <button
+                          onClick={() => showToast('error', 'Cuti Ditolak', `${leave.employeeName} - ${leave.type}`)}
+                          className="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition"
+                        >
+                          ✗ Reject
+                        </button>
                       </div>
                     ) : (
                       <span className="text-xs text-gray-400">-</span>

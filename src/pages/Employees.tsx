@@ -1,12 +1,17 @@
 import { useState } from 'react';
 import { Search, Filter, Plus, Edit, Trash2, Eye, Download, Upload } from 'lucide-react';
-import { employees } from '../data/mockData';
+import { employees, Employee } from '../data/mockData';
+import EmployeeFormModal from '../components/EmployeeFormModal';
+import { useToast } from '../components/Toast';
 
 export default function Employees() {
+  const { showToast } = useToast();
   const [search, setSearch] = useState('');
   const [filterDept, setFilterDept] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [viewMode, setViewMode] = useState<'table' | 'card'>('table');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
 
   const departments = [...new Set(employees.map(e => e.department))];
 
@@ -36,13 +41,25 @@ export default function Employees() {
           <p className="text-sm text-gray-500">Kelola seluruh data karyawan MR VAPOR</p>
         </div>
         <div className="flex gap-2">
-          <button className="flex items-center gap-2 px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg hover:bg-gray-50">
+          <button
+            onClick={() => showToast('info', 'Fitur Import', 'Fitur import CSV akan segera tersedia')}
+            className="flex items-center gap-2 px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
+          >
             <Upload size={16} /> Import
           </button>
-          <button className="flex items-center gap-2 px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg hover:bg-gray-50">
+          <button
+            onClick={() => showToast('info', 'Fitur Export', 'Fitur export PDF akan segera tersedia')}
+            className="flex items-center gap-2 px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
+          >
             <Download size={16} /> Export
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">
+          <button
+            onClick={() => {
+              setSelectedEmployee(null);
+              setIsModalOpen(true);
+            }}
+            className="flex items-center gap-2 px-4 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
+          >
             <Plus size={16} /> Tambah Karyawan
           </button>
         </div>
@@ -138,9 +155,27 @@ export default function Employees() {
                     <td className="px-4 py-3 text-gray-600">{new Date(emp.joinDate).toLocaleDateString('id-ID')}</td>
                     <td className="px-4 py-3">
                       <div className="flex gap-1">
-                        <button className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"><Eye size={14} /></button>
-                        <button className="p-1.5 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded"><Edit size={14} /></button>
-                        <button className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"><Trash2 size={14} /></button>
+                        <button
+                          onClick={() => showToast('info', 'Detail Karyawan', `Melihat detail ${emp.name}`)}
+                          className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
+                        >
+                          <Eye size={14} />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedEmployee(emp);
+                            setIsModalOpen(true);
+                          }}
+                          className="p-1.5 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded"
+                        >
+                          <Edit size={14} />
+                        </button>
+                        <button
+                          onClick={() => showToast('warning', 'Konfirmasi Hapus', `Apakah Anda yakin ingin menghapus ${emp.name}?`)}
+                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
+                        >
+                          <Trash2 size={14} />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -198,6 +233,13 @@ export default function Employees() {
           ))}
         </div>
       )}
+
+      {/* Employee Form Modal */}
+      <EmployeeFormModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        employee={selectedEmployee}
+      />
     </div>
   );
 }
