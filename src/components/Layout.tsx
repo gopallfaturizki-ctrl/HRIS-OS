@@ -16,6 +16,9 @@ import {
   LogOut,
   Menu,
   X,
+  FileBarChart,
+  User,
+  Settings,
 } from 'lucide-react';
 
 const menuItems = [
@@ -32,6 +35,9 @@ const menuItems = [
   { path: '/discipline', label: 'Disiplin', icon: AlertTriangle },
   { path: '/contracts', label: 'Kontrak', icon: FileText },
   { path: '/resign', label: 'Resign', icon: LogOut },
+  { path: '/reports', label: 'Laporan', icon: FileBarChart },
+  { path: '/profile', label: 'Profil', icon: User },
+  { path: '/settings', label: 'Pengaturan', icon: Settings },
 ];
 
 export default function Layout() {

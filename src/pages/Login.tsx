@@ -1,9 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Lock, Mail, User } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
+import { isSupabaseConfigured } from '../lib/supabase';
+import { useToast } from '../components/Toast';
 
 export default function Login() {
   const navigate = useNavigate();
+  const { signIn, isConfigured } = useAuth();
+  const { showToast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -15,16 +20,32 @@ export default function Login() {
     setError('');
     setLoading(true);
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    // Demo credentials
-    if (email === 'admin@mrvapor.com' && password === 'admin123') {
-      localStorage.setItem('isAuthenticated', 'true');
-      localStorage.setItem('user', JSON.stringify({ name: 'Admin HRD', email, role: 'Admin' }));
-      navigate('/');
-    } else {
-      setError('Email atau password salah. Gunakan: admin@mrvapor.com / admin123');
+    try {
+      if (isConfigured) {
+        // Use Supabase Auth
+        const { error } = await signIn(email, password);
+        if (error) {
+          setError(error.message);
+          setLoading(false);
+          return;
+        }
+        showToast('success', 'Login Berhasil', 'Selamat datang kembali!');
+        navigate('/');
+      } else {
+        // Demo mode
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        if (email === 'admin@mrvapor.com' && password === 'admin123') {
+          localStorage.setItem('isAuthenticated', 'true');
+          localStorage.setItem('user', JSON.stringify({ name: 'Admin HRD', email, role: 'Admin' }));
+          showToast('success', 'Login Berhasil', 'Mode demo aktif');
+          navigate('/');
+        } else {
+          setError('Email atau password salah. Gunakan: admin@mrvapor.com / admin123');
+          setLoading(false);
+        }
+      }
+    } catch (err) {
+      setError('Terjadi kesalahan. Silakan coba lagi.');
       setLoading(false);
     }
   };
@@ -34,11 +55,17 @@ export default function Login() {
       <div className="w-full max-w-md">
         {/* Logo & Brand */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-emerald-500 to-cyan-600 rounded-2xl mb-4 shadow-lg">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-emerald-500 to-cyan-600 rounded-2xl mb-4 shadow-lg shadow-emerald-500/30">
             <span className="text-white font-bold text-2xl">MV</span>
           </div>
           <h1 className="text-3xl font-bold text-gray-900">MR VAPOR</h1>
           <p className="text-gray-600 mt-2">Human Resource Information System</p>
+          {!isSupabaseConfigured() && (
+            <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 border border-amber-200 rounded-full">
+              <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
+              <span className="text-xs text-amber-700 font-medium">Mode Demo</span>
+            </div>
+          )}
         </div>
 
         {/* Login Card */}
@@ -132,9 +159,19 @@ export default function Login() {
 
           {/* Demo Credentials */}
           <div className="mt-6 p-4 bg-blue-50 border border-blue-100 rounded-lg">
-            <p className="text-xs font-semibold text-blue-900 mb-2">Demo Credentials:</p>
-            <p className="text-xs text-blue-700">Email: <span className="font-mono">admin@mrvapor.com</span></p>
-            <p className="text-xs text-blue-700">Password: <span className="font-mono">admin123</span></p>
+            <p className="text-xs font-semibold text-blue-900 mb-2">
+              {isSupabaseConfigured() ? '💡 Info' : '🔑 Demo Credentials'}
+            </p>
+            {isSupabaseConfigured() ? (
+              <p className="text-xs text-blue-700">
+                Terhubung ke Supabase. Gunakan akun yang sudah terdaftar.
+              </p>
+            ) : (
+              <>
+                <p className="text-xs text-blue-700">Email: <span className="font-mono">admin@mrvapor.com</span></p>
+                <p className="text-xs text-blue-700">Password: <span className="font-mono">admin123</span></p>
+              </>
+            )}
           </div>
         </div>
 
