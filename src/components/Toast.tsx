@@ -14,12 +14,12 @@ interface ToastContextType {
   showToast: (type: ToastType, title: string, message?: string) => void;
 }
 
-const ToastContext = createContext<ToastContextType | null>(null);
+const ToastContext = createContext<ToastContextType>({
+  showToast: () => {},
+});
 
 export function useToast() {
-  const ctx = useContext(ToastContext);
-  if (!ctx) throw new Error('useToast must be used within ToastProvider');
-  return ctx;
+  return useContext(ToastContext);
 }
 
 const iconMap = {
@@ -67,7 +67,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           return (
             <div
               key={toast.id}
-              className={`pointer-events-auto min-w-[300px] max-w-md p-4 rounded-xl border shadow-lg ${colorMap[toast.type]} animate-slide-in`}
+              className={`pointer-events-auto min-w-[300px] max-w-md p-4 rounded-xl border shadow-lg ${colorMap[toast.type]}`}
               style={{
                 animation: 'slideIn 0.3s ease-out',
               }}
