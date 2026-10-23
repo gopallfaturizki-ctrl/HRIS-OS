@@ -11,6 +11,7 @@ import {
   disciplineRecords as initialDiscipline,
   contractRecords as initialContracts,
   shiftSchedules as initialShifts,
+  resignRecords as initialResign,
 } from '../data/mockData';
 
 export type Employee = typeof initialEmployees[0];
@@ -24,6 +25,7 @@ export type TrainingProgram = typeof initialTraining[0];
 export type DisciplineRecord = typeof initialDiscipline[0];
 export type ContractRecord = typeof initialContracts[0];
 export type ShiftSchedule = typeof initialShifts[0];
+export type ResignRecord = typeof initialResign[0];
 
 interface StoreState {
   employees: Employee[];
@@ -37,6 +39,7 @@ interface StoreState {
   discipline: DisciplineRecord[];
   contracts: ContractRecord[];
   shifts: ShiftSchedule[];
+  resign: ResignRecord[];
 }
 
 interface StoreActions {
@@ -68,9 +71,28 @@ interface StoreActions {
 
   // Discipline actions
   addDiscipline: (record: DisciplineRecord) => void;
+  deleteDiscipline: (id: string) => void;
 
   // Training actions
   addTraining: (program: TrainingProgram) => void;
+  updateTraining: (id: string, data: Partial<TrainingProgram>) => void;
+  deleteTraining: (id: string) => void;
+
+  // Recruitment actions
+  deleteCandidate: (id: string) => void;
+
+  // Attendance actions
+  addAttendance: (record: AttendanceRecord) => void;
+  updateAttendance: (id: string, data: Partial<AttendanceRecord>) => void;
+
+  // Contract actions
+  addContract: (contract: ContractRecord) => void;
+  deleteContract: (id: string) => void;
+
+  // Resign actions
+  addResign: (record: ResignRecord) => void;
+  updateResign: (id: string, data: Partial<ResignRecord>) => void;
+  deleteResign: (id: string) => void;
 
   // Computed stats
   getStats: () => {
@@ -105,6 +127,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     discipline: initialDiscipline,
     contracts: initialContracts,
     shifts: initialShifts,
+    resign: initialResign,
   });
 
   const addEmployee = useCallback((emp: Employee) => {
@@ -195,6 +218,59 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setState(s => ({ ...s, training: [...s.training, program] }));
   }, []);
 
+  const updateTraining = useCallback((id: string, data: Partial<TrainingProgram>) => {
+    setState(s => ({
+      ...s,
+      training: s.training.map(t => t.id === id ? { ...t, ...data } : t),
+    }));
+  }, []);
+
+  const deleteTraining = useCallback((id: string) => {
+    setState(s => ({ ...s, training: s.training.filter(t => t.id !== id) }));
+  }, []);
+
+  const deleteDiscipline = useCallback((id: string) => {
+    setState(s => ({ ...s, discipline: s.discipline.filter(d => d.id !== id) }));
+  }, []);
+
+  const deleteCandidate = useCallback((id: string) => {
+    setState(s => ({ ...s, recruitment: s.recruitment.filter(c => c.id !== id) }));
+  }, []);
+
+  const addAttendance = useCallback((record: AttendanceRecord) => {
+    setState(s => ({ ...s, attendance: [...s.attendance, record] }));
+  }, []);
+
+  const updateAttendance = useCallback((id: string, data: Partial<AttendanceRecord>) => {
+    setState(s => ({
+      ...s,
+      attendance: s.attendance.map(a => a.id === id ? { ...a, ...data } : a),
+    }));
+  }, []);
+
+  const addContract = useCallback((contract: ContractRecord) => {
+    setState(s => ({ ...s, contracts: [...s.contracts, contract] }));
+  }, []);
+
+  const deleteContract = useCallback((id: string) => {
+    setState(s => ({ ...s, contracts: s.contracts.filter(c => c.id !== id) }));
+  }, []);
+
+  const addResign = useCallback((record: ResignRecord) => {
+    setState(s => ({ ...s, resign: [...s.resign, record] }));
+  }, []);
+
+  const updateResign = useCallback((id: string, data: Partial<ResignRecord>) => {
+    setState(s => ({
+      ...s,
+      resign: s.resign.map(r => r.id === id ? { ...r, ...data } : r),
+    }));
+  }, []);
+
+  const deleteResign = useCallback((id: string) => {
+    setState(s => ({ ...s, resign: s.resign.filter(r => r.id !== id) }));
+  }, []);
+
   const getStats = useCallback(() => {
     const totalEmployees = state.employees.length;
     const presentToday = state.attendance.filter(a => a.status === 'Hadir' || a.status === 'Terlambat').length;
@@ -237,10 +313,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     addOvertime,
     updateCandidateStage,
     addCandidate,
+    deleteCandidate,
     updatePayrollStatus,
     extendContract,
+    addContract,
+    deleteContract,
     addDiscipline,
+    deleteDiscipline,
     addTraining,
+    updateTraining,
+    deleteTraining,
+    addAttendance,
+    updateAttendance,
+    addResign,
+    updateResign,
+    deleteResign,
     getStats,
   };
 

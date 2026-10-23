@@ -1,32 +1,81 @@
-import { useState } from 'react';
-import { Settings as SettingsIcon, Bell, Shield, Palette, Database, Save } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Bell, Shield, Palette, Database, Save } from 'lucide-react';
 import { useToast } from '../components/Toast';
 import { PageHeader } from '../components/ui';
 import { isSupabaseConfigured } from '../lib/supabase';
 
+const STORAGE_KEY = 'mrvapor_settings';
+
+interface SettingsData {
+  notifications: {
+    email: boolean;
+    push: boolean;
+    leaveApproval: boolean;
+    overtimeApproval: boolean;
+    contractExpiry: boolean;
+  };
+  appearance: {
+    language: string;
+    timezone: string;
+  };
+  security: {
+    twoFactor: boolean;
+    sessionTimeout: number;
+  };
+}
+
+const defaultSettings: SettingsData = {
+  notifications: {
+    email: true,
+    push: true,
+    leaveApproval: true,
+    overtimeApproval: true,
+    contractExpiry: true,
+  },
+  appearance: {
+    language: 'id',
+    timezone: 'Asia/Jakarta',
+  },
+  security: {
+    twoFactor: false,
+    sessionTimeout: 30,
+  },
+};
+
 export default function Settings() {
   const { showToast } = useToast();
-  const [settings, setSettings] = useState({
-    notifications: {
-      email: true,
-      push: true,
-      leaveApproval: true,
-      overtimeApproval: true,
-      contractExpiry: true,
-    },
-    appearance: {
-      language: 'id',
-      timezone: 'Asia/Jakarta',
-      dateFormat: 'DD/MM/YYYY',
-    },
-    security: {
-      twoFactor: false,
-      sessionTimeout: 30,
-    },
-  });
+  const [settings, setSettings] = useState<SettingsData>(defaultSettings);
+  const [isDirty, setIsDirty] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        setSettings(JSON.parse(saved));
+      } catch (e) {
+        console.error('Failed to parse settings', e);
+      }
+    }
+  }, []);
+
+  const updateNotification = (key: keyof SettingsData['notifications'], value: boolean) => {
+    setSettings({
+      ...settings,
+      notifications: { ...settings.notifications, [key]: value },
+    });
+    setIsDirty(true);
+  };
 
   const handleSave = () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    setIsDirty(false);
     showToast('success', 'Pengaturan Disimpan', 'Pengaturan berhasil diperbarui');
+  };
+
+  const handleReset = () => {
+    setSettings(defaultSettings);
+    setIsDirty(false);
+    showToast('info', 'Pengaturan Direset', 'Pengaturan dikembalikan ke default');
   };
 
   return (
@@ -34,8 +83,14 @@ export default function Settings() {
       <PageHeader
         title="Pengaturan"
         subtitle="Kelola preferensi dan konfigurasi sistem"
-        icon={<SettingsIcon size={20} />}
-      />
+      >
+        {isDirty && (
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-lg">
+            <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
+            <span className="text-xs text-amber-700 font-medium">Ada perubahan yang belum disimpan</span>
+          </div>
+        )}
+      </PageHeader>
 
       <div className="space-y-6">
         {/* Connection Status */}
@@ -70,11 +125,11 @@ export default function Settings() {
           </div>
           <div className="p-5 space-y-3">
             {[
-              { key: 'email', label: 'Notifikasi Email', desc: 'Terima notifikasi via email' },
-              { key: 'push', label: 'Push Notification', desc: 'Notifikasi browser' },
-              { key: 'leaveApproval', label: 'Persetujuan Cuti', desc: 'Notifikasi saat ada pengajuan cuti' },
-              { key: 'overtimeApproval', label: 'Persetujuan Lembur', desc: 'Notifikasi saat ada pengajuan lembur' },
-              { key: 'contractExpiry', label: 'Kontrak Akan Berakhir', desc: 'Peringatan kontrak即将 berakhir' },
+              { key: 'email' as const, label: 'Notifikasi Email', desc: 'Terima notifikasi via email' },
+              { key: 'push' as const, label: 'Push Notification', desc: 'Notifikasi browser' },
+              { key: 'leaveApproval' as const, label: 'Persetujuan Cuti', desc: 'Notifikasi saat ada pengajuan cuti' },
+              { key: 'overtimeApproval' as const, label: 'Persetujuan Lembur', desc: 'Notifikasi saat ada pengajuan lembur' },
+              { key: 'contractExpiry' as const, label: 'Kontrak Akan Berakhir', desc: 'Peringatan kontrak即将 berakhir' },
             ].map((item) => (
               <div key={item.key} className="flex items-center justify-between py-2">
                 <div>
@@ -84,11 +139,8 @@ export default function Settings() {
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={settings.notifications[item.key as keyof typeof settings.notifications]}
-                    onChange={(e) => setSettings({
-                      ...settings,
-                      notifications: { ...settings.notifications, [item.key]: e.target.checked }
-                    })}
+                    checked={settings.notifications[item.key]}
+                    onChange={(e) => updateNotification(item.key, e.target.checked)}
                     className="sr-only peer"
                   />
                   <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-emerald-500/20 rounded-full peer peer-checked:after:translate-x-5 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
@@ -116,10 +168,10 @@ export default function Settings() {
               <label className="block text-sm font-medium text-slate-700 mb-1">Bahasa</label>
               <select
                 value={settings.appearance.language}
-                onChange={(e) => setSettings({
-                  ...settings,
-                  appearance: { ...settings.appearance, language: e.target.value }
-                })}
+                onChange={(e) => {
+                  setSettings({ ...settings, appearance: { ...settings.appearance, language: e.target.value } });
+                  setIsDirty(true);
+                }}
                 className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
               >
                 <option value="id">Bahasa Indonesia</option>
@@ -130,10 +182,10 @@ export default function Settings() {
               <label className="block text-sm font-medium text-slate-700 mb-1">Zona Waktu</label>
               <select
                 value={settings.appearance.timezone}
-                onChange={(e) => setSettings({
-                  ...settings,
-                  appearance: { ...settings.appearance, timezone: e.target.value }
-                })}
+                onChange={(e) => {
+                  setSettings({ ...settings, appearance: { ...settings.appearance, timezone: e.target.value } });
+                  setIsDirty(true);
+                }}
                 className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
               >
                 <option value="Asia/Jakarta">WIB (Jakarta)</option>
@@ -167,10 +219,10 @@ export default function Settings() {
                 <input
                   type="checkbox"
                   checked={settings.security.twoFactor}
-                  onChange={(e) => setSettings({
-                    ...settings,
-                    security: { ...settings.security, twoFactor: e.target.checked }
-                  })}
+                  onChange={(e) => {
+                    setSettings({ ...settings, security: { ...settings.security, twoFactor: e.target.checked } });
+                    setIsDirty(true);
+                  }}
                   className="sr-only peer"
                 />
                 <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-emerald-500/20 rounded-full peer peer-checked:after:translate-x-5 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
@@ -181,10 +233,10 @@ export default function Settings() {
               <input
                 type="number"
                 value={settings.security.sessionTimeout}
-                onChange={(e) => setSettings({
-                  ...settings,
-                  security: { ...settings.security, sessionTimeout: parseInt(e.target.value) }
-                })}
+                onChange={(e) => {
+                  setSettings({ ...settings, security: { ...settings.security, sessionTimeout: parseInt(e.target.value) || 30 } });
+                  setIsDirty(true);
+                }}
                 className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
               />
             </div>
@@ -192,10 +244,17 @@ export default function Settings() {
         </div>
 
         {/* Save Button */}
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={handleReset}
+            className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition"
+          >
+            Reset ke Default
+          </button>
           <button
             onClick={handleSave}
-            className="flex items-center gap-2 px-6 py-2.5 text-sm font-medium bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition shadow-sm"
+            disabled={!isDirty}
+            className="flex items-center gap-2 px-6 py-2.5 text-sm font-medium bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Save size={16} />
             Simpan Pengaturan
