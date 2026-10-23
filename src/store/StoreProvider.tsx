@@ -1,0 +1,254 @@
+import { createContext, useContext, useState, ReactNode, useCallback } from 'react';
+import {
+  employees as initialEmployees,
+  attendanceRecords as initialAttendance,
+  leaveRequests as initialLeave,
+  overtimeRecords as initialOvertime,
+  payrollRecords as initialPayroll,
+  recruitmentCandidates as initialRecruitment,
+  kpiRecords as initialKpi,
+  trainingPrograms as initialTraining,
+  disciplineRecords as initialDiscipline,
+  contractRecords as initialContracts,
+  shiftSchedules as initialShifts,
+} from '../data/mockData';
+
+export type Employee = typeof initialEmployees[0];
+export type AttendanceRecord = typeof initialAttendance[0];
+export type LeaveRequest = typeof initialLeave[0];
+export type OvertimeRecord = typeof initialOvertime[0];
+export type PayrollRecord = typeof initialPayroll[0];
+export type RecruitmentCandidate = typeof initialRecruitment[0];
+export type KPIRecord = typeof initialKpi[0];
+export type TrainingProgram = typeof initialTraining[0];
+export type DisciplineRecord = typeof initialDiscipline[0];
+export type ContractRecord = typeof initialContracts[0];
+export type ShiftSchedule = typeof initialShifts[0];
+
+interface StoreState {
+  employees: Employee[];
+  attendance: AttendanceRecord[];
+  leaves: LeaveRequest[];
+  overtime: OvertimeRecord[];
+  payroll: PayrollRecord[];
+  recruitment: RecruitmentCandidate[];
+  kpi: KPIRecord[];
+  training: TrainingProgram[];
+  discipline: DisciplineRecord[];
+  contracts: ContractRecord[];
+  shifts: ShiftSchedule[];
+}
+
+interface StoreActions {
+  // Employee actions
+  addEmployee: (emp: Employee) => void;
+  updateEmployee: (id: string, data: Partial<Employee>) => void;
+  deleteEmployee: (id: string) => void;
+  getEmployeeById: (id: string) => Employee | undefined;
+
+  // Leave actions
+  approveLeave: (id: string) => void;
+  rejectLeave: (id: string) => void;
+  addLeave: (leave: LeaveRequest) => void;
+
+  // Overtime actions
+  approveOvertime: (id: string) => void;
+  rejectOvertime: (id: string) => void;
+  addOvertime: (ot: OvertimeRecord) => void;
+
+  // Recruitment actions
+  updateCandidateStage: (id: string, stage: RecruitmentCandidate['stage']) => void;
+  addCandidate: (candidate: RecruitmentCandidate) => void;
+
+  // Payroll actions
+  updatePayrollStatus: (id: string, status: PayrollRecord['status']) => void;
+
+  // Contract actions
+  extendContract: (id: string) => void;
+
+  // Discipline actions
+  addDiscipline: (record: DisciplineRecord) => void;
+
+  // Training actions
+  addTraining: (program: TrainingProgram) => void;
+
+  // Computed stats
+  getStats: () => {
+    totalEmployees: number;
+    presentToday: number;
+    onLeave: number;
+    lateToday: number;
+    absentToday: number;
+    pendingLeaves: number;
+    pendingOvertime: number;
+    expiringContracts: number;
+    openPositions: number;
+    totalPayroll: number;
+    attendanceRate: number;
+  };
+}
+
+type Store = StoreState & StoreActions;
+
+const StoreContext = createContext<Store | null>(null);
+
+export function StoreProvider({ children }: { children: ReactNode }) {
+  const [state, setState] = useState<StoreState>({
+    employees: initialEmployees,
+    attendance: initialAttendance,
+    leaves: initialLeave,
+    overtime: initialOvertime,
+    payroll: initialPayroll,
+    recruitment: initialRecruitment,
+    kpi: initialKpi,
+    training: initialTraining,
+    discipline: initialDiscipline,
+    contracts: initialContracts,
+    shifts: initialShifts,
+  });
+
+  const addEmployee = useCallback((emp: Employee) => {
+    setState(s => ({ ...s, employees: [...s.employees, emp] }));
+  }, []);
+
+  const updateEmployee = useCallback((id: string, data: Partial<Employee>) => {
+    setState(s => ({
+      ...s,
+      employees: s.employees.map(e => e.id === id ? { ...e, ...data } : e),
+    }));
+  }, []);
+
+  const deleteEmployee = useCallback((id: string) => {
+    setState(s => ({ ...s, employees: s.employees.filter(e => e.id !== id) }));
+  }, []);
+
+  const getEmployeeById = useCallback((id: string) => {
+    return state.employees.find(e => e.id === id);
+  }, [state.employees]);
+
+  const approveLeave = useCallback((id: string) => {
+    setState(s => ({
+      ...s,
+      leaves: s.leaves.map(l => l.id === id ? { ...l, status: 'Approved' as const, approvedBy: 'Admin HRD' } : l),
+    }));
+  }, []);
+
+  const rejectLeave = useCallback((id: string) => {
+    setState(s => ({
+      ...s,
+      leaves: s.leaves.map(l => l.id === id ? { ...l, status: 'Rejected' as const, approvedBy: 'Admin HRD' } : l),
+    }));
+  }, []);
+
+  const addLeave = useCallback((leave: LeaveRequest) => {
+    setState(s => ({ ...s, leaves: [...s.leaves, leave] }));
+  }, []);
+
+  const approveOvertime = useCallback((id: string) => {
+    setState(s => ({
+      ...s,
+      overtime: s.overtime.map(o => o.id === id ? { ...o, status: 'Approved' as const } : o),
+    }));
+  }, []);
+
+  const rejectOvertime = useCallback((id: string) => {
+    setState(s => ({
+      ...s,
+      overtime: s.overtime.map(o => o.id === id ? { ...o, status: 'Rejected' as const } : o),
+    }));
+  }, []);
+
+  const addOvertime = useCallback((ot: OvertimeRecord) => {
+    setState(s => ({ ...s, overtime: [...s.overtime, ot] }));
+  }, []);
+
+  const updateCandidateStage = useCallback((id: string, stage: RecruitmentCandidate['stage']) => {
+    setState(s => ({
+      ...s,
+      recruitment: s.recruitment.map(c => c.id === id ? { ...c, stage } : c),
+    }));
+  }, []);
+
+  const addCandidate = useCallback((candidate: RecruitmentCandidate) => {
+    setState(s => ({ ...s, recruitment: [...s.recruitment, candidate] }));
+  }, []);
+
+  const updatePayrollStatus = useCallback((id: string, status: PayrollRecord['status']) => {
+    setState(s => ({
+      ...s,
+      payroll: s.payroll.map(p => p.id === id ? { ...p, status } : p),
+    }));
+  }, []);
+
+  const extendContract = useCallback((id: string) => {
+    setState(s => ({
+      ...s,
+      contracts: s.contracts.map(c => c.id === id ? { ...c, status: 'Diperpanjang' as const } : c),
+    }));
+  }, []);
+
+  const addDiscipline = useCallback((record: DisciplineRecord) => {
+    setState(s => ({ ...s, discipline: [...s.discipline, record] }));
+  }, []);
+
+  const addTraining = useCallback((program: TrainingProgram) => {
+    setState(s => ({ ...s, training: [...s.training, program] }));
+  }, []);
+
+  const getStats = useCallback(() => {
+    const totalEmployees = state.employees.length;
+    const presentToday = state.attendance.filter(a => a.status === 'Hadir' || a.status === 'Terlambat').length;
+    const onLeave = state.attendance.filter(a => a.status === 'Izin' || a.status === 'Sakit').length;
+    const lateToday = state.attendance.filter(a => a.status === 'Terlambat').length;
+    const absentToday = state.attendance.filter(a => a.status === 'Alpha').length;
+    const pendingLeaves = state.leaves.filter(l => l.status === 'Pending').length;
+    const pendingOvertime = state.overtime.filter(o => o.status === 'Pending').length;
+    const expiringContracts = state.contracts.filter(c => c.status === 'Akan Berakhir').length;
+    const openPositions = state.recruitment.filter(r => !['Diterima', 'Ditolak'].includes(r.stage)).length;
+    const totalPayroll = state.payroll.reduce((sum, p) => sum + p.netSalary, 0);
+    const attendanceRate = totalEmployees > 0 ? Math.round((presentToday / totalEmployees) * 100) : 0;
+
+    return {
+      totalEmployees,
+      presentToday,
+      onLeave,
+      lateToday,
+      absentToday,
+      pendingLeaves,
+      pendingOvertime,
+      expiringContracts,
+      openPositions,
+      totalPayroll,
+      attendanceRate,
+    };
+  }, [state]);
+
+  const store: Store = {
+    ...state,
+    addEmployee,
+    updateEmployee,
+    deleteEmployee,
+    getEmployeeById,
+    approveLeave,
+    rejectLeave,
+    addLeave,
+    approveOvertime,
+    rejectOvertime,
+    addOvertime,
+    updateCandidateStage,
+    addCandidate,
+    updatePayrollStatus,
+    extendContract,
+    addDiscipline,
+    addTraining,
+    getStats,
+  };
+
+  return <StoreContext.Provider value={store}>{children}</StoreContext.Provider>;
+}
+
+export function useStore(): Store {
+  const ctx = useContext(StoreContext);
+  if (!ctx) throw new Error('useStore must be used within StoreProvider');
+  return ctx;
+}

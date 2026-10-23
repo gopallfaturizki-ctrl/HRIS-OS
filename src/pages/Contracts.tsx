@@ -1,86 +1,37 @@
-import { FileText, Plus, AlertCircle, CheckCircle, Clock } from 'lucide-react';
-import { contractRecords } from '../data/mockData';
+import { FileText, AlertCircle, CheckCircle, Clock } from 'lucide-react';
+import { useStore } from '../store/StoreProvider';
+import { useToast } from '../components/Toast';
+import { PageHeader, StatCard, StatusBadge } from '../components/ui';
 
 export default function Contracts() {
-  const statusBadge = (status: string) => {
-    switch (status) {
-      case 'Aktif': return 'bg-emerald-100 text-emerald-700';
-      case 'Akan Berakhir': return 'bg-amber-100 text-amber-700';
-      case 'Berakhir': return 'bg-gray-100 text-gray-700';
-      case 'Diperpanjang': return 'bg-blue-100 text-blue-700';
-      default: return 'bg-gray-100 text-gray-700';
-    }
-  };
-
-  const typeBadge = (type: string) => {
-    switch (type) {
-      case 'PKWT': return 'bg-blue-100 text-blue-700';
-      case 'PKWTT': return 'bg-emerald-100 text-emerald-700';
-      case 'Magang': return 'bg-purple-100 text-purple-700';
-      default: return 'bg-gray-100 text-gray-700';
-    }
-  };
+  const store = useStore();
+  const { showToast } = useToast();
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold text-gray-800">Manajemen Kontrak</h1>
-          <p className="text-sm text-gray-500">Kelola kontrak kerja karyawan</p>
-        </div>
-        <button className="flex items-center gap-2 px-4 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">
-          <Plus size={16} /> Buat Kontrak
-        </button>
-      </div>
+    <div>
+      <PageHeader
+        title="Manajemen Kontrak"
+        subtitle="Kelola kontrak kerja karyawan"
+        icon={<FileText size={20} />}
+        actionLabel="Buat Kontrak"
+        onAction={() => showToast('info', 'Buat Kontrak', 'Form kontrak akan segera tersedia')}
+      />
 
-      {/* Summary */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-emerald-100 rounded-lg"><CheckCircle size={16} className="text-emerald-600" /></div>
-            <div>
-              <p className="text-lg font-bold text-gray-800">{contractRecords.filter(c => c.status === 'Aktif').length}</p>
-              <p className="text-xs text-gray-500">Kontrak Aktif</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-amber-100 rounded-lg"><AlertCircle size={16} className="text-amber-600" /></div>
-            <div>
-              <p className="text-lg font-bold text-gray-800">{contractRecords.filter(c => c.status === 'Akan Berakhir').length}</p>
-              <p className="text-xs text-gray-500">Akan Berakhir</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-blue-100 rounded-lg"><FileText size={16} className="text-blue-600" /></div>
-            <div>
-              <p className="text-lg font-bold text-gray-800">{contractRecords.filter(c => c.type === 'PKWT').length}</p>
-              <p className="text-xs text-gray-500">PKWT</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-purple-100 rounded-lg"><Clock size={16} className="text-purple-600" /></div>
-            <div>
-              <p className="text-lg font-bold text-gray-800">{contractRecords.filter(c => c.type === 'Magang').length}</p>
-              <p className="text-xs text-gray-500">Magang</p>
-            </div>
-          </div>
-        </div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+        <StatCard label="Kontrak Aktif" value={store.contracts.filter(c => c.status === 'Aktif').length} icon={<CheckCircle size={16} />} color="emerald" />
+        <StatCard label="Akan Berakhir" value={store.contracts.filter(c => c.status === 'Akan Berakhir').length} icon={<AlertCircle size={16} />} color="amber" />
+        <StatCard label="PKWT" value={store.contracts.filter(c => c.type === 'PKWT').length} icon={<FileText size={16} />} color="blue" />
+        <StatCard label="Magang" value={store.contracts.filter(c => c.type === 'Magang').length} icon={<Clock size={16} />} color="purple" />
       </div>
 
       {/* Alert for expiring contracts */}
-      {contractRecords.filter(c => c.status === 'Akan Berakhir').length > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
-          <AlertCircle size={20} className="text-amber-600 mt-0.5" />
+      {store.contracts.filter(c => c.status === 'Akan Berakhir').length > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3 mb-4">
+          <AlertCircle size={20} className="text-amber-600 mt-0.5 flex-shrink-0" />
           <div>
             <h4 className="text-sm font-semibold text-amber-800">Peringatan Kontrak Akan Berakhir</h4>
             <p className="text-xs text-amber-700 mt-1">
-              {contractRecords.filter(c => c.status === 'Akan Berakhir').map(c => c.employeeName).join(', ')} - Segera lakukan perpanjangan atau evaluasi.
+              {store.contracts.filter(c => c.status === 'Akan Berakhir').map(c => c.employeeName).join(', ')} - Segera lakukan perpanjangan atau evaluasi.
             </p>
           </div>
         </div>
@@ -102,7 +53,7 @@ export default function Contracts() {
               </tr>
             </thead>
             <tbody>
-              {contractRecords.map((contract) => {
+              {store.contracts.map((contract) => {
                 const masaKerja = contract.endDate !== '-'
                   ? (() => {
                       const start = new Date(contract.startDate);
@@ -121,23 +72,32 @@ export default function Contracts() {
                   <tr key={contract.id} className="border-b border-gray-50 hover:bg-gray-50/50">
                     <td className="px-4 py-3 font-medium text-gray-800">{contract.employeeName}</td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${typeBadge(contract.type)}`}>
-                        {contract.type}
-                      </span>
+                      <StatusBadge status={contract.type} type="contract" />
                     </td>
                     <td className="px-4 py-3 text-gray-600">{new Date(contract.startDate).toLocaleDateString('id-ID')}</td>
                     <td className="px-4 py-3 text-gray-600">{contract.endDate !== '-' ? new Date(contract.endDate).toLocaleDateString('id-ID') : 'Tidak terbatas'}</td>
                     <td className="px-4 py-3 text-gray-600 text-xs">{masaKerja}</td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusBadge(contract.status)}`}>
-                        {contract.status}
-                      </span>
+                      <StatusBadge status={contract.status} type="contract" />
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex gap-1">
-                        <button className="px-2 py-1 text-xs text-blue-600 bg-blue-50 rounded hover:bg-blue-100">Detail</button>
+                        <button
+                          onClick={() => showToast('info', 'Detail Kontrak', `Melihat detail kontrak ${contract.employeeName}`)}
+                          className="px-2 py-1 text-xs text-blue-600 bg-blue-50 rounded hover:bg-blue-100 transition"
+                        >
+                          Detail
+                        </button>
                         {contract.status === 'Akan Berakhir' && (
-                          <button className="px-2 py-1 text-xs text-emerald-600 bg-emerald-50 rounded hover:bg-emerald-100">Perpanjang</button>
+                          <button
+                            onClick={() => {
+                              store.extendContract(contract.id);
+                              showToast('success', 'Kontrak Diperpanjang', `${contract.employeeName}`);
+                            }}
+                            className="px-2 py-1 text-xs text-emerald-600 bg-emerald-50 rounded hover:bg-emerald-100 transition"
+                          >
+                            Perpanjang
+                          </button>
                         )}
                       </div>
                     </td>

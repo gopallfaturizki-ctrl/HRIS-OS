@@ -1,45 +1,58 @@
-import { Clock, Plus, Edit, Trash2 } from 'lucide-react';
-import { shiftSchedules, employees } from '../data/mockData';
-
-const weeklySchedule = [
-  { day: 'Senin', shifts: [{ emp: 'Ahmad Rizki', shift: 'Shift Pagi' }, { emp: 'Budi Santoso', shift: 'Shift Siang' }, { emp: 'Rina Wulandari', shift: 'Shift Pagi' }] },
-  { day: 'Selasa', shifts: [{ emp: 'Ahmad Rizki', shift: 'Shift Pagi' }, { emp: 'Budi Santoso', shift: 'Shift Malam' }, { emp: 'Rina Wulandari', shift: 'Shift Siang' }] },
-  { day: 'Rabu', shifts: [{ emp: 'Ahmad Rizki', shift: 'Shift Siang' }, { emp: 'Budi Santoso', shift: 'Shift Pagi' }, { emp: 'Rina Wulandari', shift: 'Shift Pagi' }] },
-  { day: 'Kamis', shifts: [{ emp: 'Ahmad Rizki', shift: 'Shift Pagi' }, { emp: 'Budi Santoso', shift: 'Shift Siang' }, { emp: 'Rina Wulandari', shift: 'Shift Malam' }] },
-  { day: 'Jumat', shifts: [{ emp: 'Ahmad Rizki', shift: 'Shift Siang' }, { emp: 'Budi Santoso', shift: 'Shift Pagi' }, { emp: 'Rina Wulandari', shift: 'Shift Pagi' }] },
-  { day: 'Sabtu', shifts: [{ emp: 'Budi Santoso', shift: 'Shift Pagi' }, { emp: 'Maya Sari', shift: 'Shift Siang' }] },
-  { day: 'Minggu', shifts: [{ emp: 'Budi Santoso', shift: 'Libur' }, { emp: 'Maya Sari', shift: 'Libur' }] },
-];
+import { Clock, Edit, Trash2 } from 'lucide-react';
+import { useStore } from '../store/StoreProvider';
+import { useToast } from '../components/Toast';
+import { PageHeader, StatusBadge } from '../components/ui';
 
 export default function Shifts() {
+  const store = useStore();
+  const { showToast } = useToast();
+
+  const weeklySchedule = [
+    { day: 'Senin', shifts: [{ emp: 'Ahmad Rizki', shift: 'Shift Pagi' }, { emp: 'Budi Santoso', shift: 'Shift Siang' }, { emp: 'Rina Wulandari', shift: 'Shift Pagi' }] },
+    { day: 'Selasa', shifts: [{ emp: 'Ahmad Rizki', shift: 'Shift Pagi' }, { emp: 'Budi Santoso', shift: 'Shift Malam' }, { emp: 'Rina Wulandari', shift: 'Shift Siang' }] },
+    { day: 'Rabu', shifts: [{ emp: 'Ahmad Rizki', shift: 'Shift Siang' }, { emp: 'Budi Santoso', shift: 'Shift Pagi' }, { emp: 'Rina Wulandari', shift: 'Shift Pagi' }] },
+    { day: 'Kamis', shifts: [{ emp: 'Ahmad Rizki', shift: 'Shift Pagi' }, { emp: 'Budi Santoso', shift: 'Shift Siang' }, { emp: 'Rina Wulandari', shift: 'Shift Malam' }] },
+    { day: 'Jumat', shifts: [{ emp: 'Ahmad Rizki', shift: 'Shift Siang' }, { emp: 'Budi Santoso', shift: 'Shift Pagi' }, { emp: 'Rina Wulandari', shift: 'Shift Pagi' }] },
+    { day: 'Sabtu', shifts: [{ emp: 'Budi Santoso', shift: 'Shift Pagi' }, { emp: 'Maya Sari', shift: 'Shift Siang' }] },
+    { day: 'Minggu', shifts: [{ emp: 'Budi Santoso', shift: 'Libur' }, { emp: 'Maya Sari', shift: 'Libur' }] },
+  ];
+
   const getShiftColor = (shiftName: string) => {
-    const shift = shiftSchedules.find(s => s.name === shiftName);
+    const shift = store.shifts.find(s => s.name === shiftName);
     return shift?.color || 'bg-gray-100 text-gray-600';
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold text-gray-800">Manajemen Shift</h1>
-          <p className="text-sm text-gray-500">Kelola jadwal shift karyawan</p>
-        </div>
-        <button className="flex items-center gap-2 px-4 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">
-          <Plus size={16} /> Buat Jadwal
-        </button>
-      </div>
+    <div>
+      <PageHeader
+        title="Manajemen Shift"
+        subtitle="Kelola jadwal shift karyawan"
+        icon={<Clock size={20} />}
+        actionLabel="Buat Jadwal"
+        onAction={() => showToast('info', 'Buat Jadwal', 'Form buat jadwal akan segera tersedia')}
+      />
 
       {/* Shift Definitions */}
-      <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
+      <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm mb-6">
         <h3 className="text-sm font-semibold text-gray-800 mb-4">Definisi Shift</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {shiftSchedules.map((shift) => (
+          {store.shifts.map((shift) => (
             <div key={shift.id} className={`rounded-xl p-4 border ${shift.color.split(' ')[0]} border-opacity-30`}>
               <div className="flex items-center justify-between mb-2">
                 <h4 className={`font-semibold ${shift.color.split(' ')[1]}`}>{shift.name}</h4>
                 <div className="flex gap-1">
-                  <button className="p-1 hover:bg-white/50 rounded"><Edit size={12} /></button>
-                  <button className="p-1 hover:bg-white/50 rounded"><Trash2 size={12} /></button>
+                  <button
+                    onClick={() => showToast('info', 'Edit Shift', `Mengedit ${shift.name}`)}
+                    className="p-1 hover:bg-white/50 rounded"
+                  >
+                    <Edit size={12} />
+                  </button>
+                  <button
+                    onClick={() => showToast('warning', 'Hapus Shift', `Menghapus ${shift.name}`)}
+                    className="p-1 hover:bg-white/50 rounded"
+                  >
+                    <Trash2 size={12} />
+                  </button>
                 </div>
               </div>
               <div className="flex items-center gap-2 mt-2">
@@ -55,7 +68,7 @@ export default function Shifts() {
       </div>
 
       {/* Weekly Schedule */}
-      <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
+      <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm mb-6">
         <h3 className="text-sm font-semibold text-gray-800 mb-4">Jadwal Mingguan - Operasional</h3>
         <div className="overflow-x-auto">
           <div className="grid grid-cols-7 gap-2 min-w-[700px]">
@@ -93,18 +106,16 @@ export default function Shifts() {
               </tr>
             </thead>
             <tbody>
-              {employees.filter(e => e.department === 'Operasional').map((emp) => (
+              {store.employees.filter(e => e.department === 'Operasional').map((emp) => (
                 <tr key={emp.id} className="border-b border-gray-50">
                   <td className="px-4 py-3 font-medium text-gray-800">{emp.name}</td>
                   <td className="px-4 py-3 text-gray-600">{emp.department}</td>
                   <td className="px-4 py-3">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${shiftSchedules[0].color}`}>
-                      {shiftSchedules[0].name}
-                    </span>
+                    <StatusBadge status={store.shifts[0]?.name || 'Shift Pagi'} />
                   </td>
                   <td className="px-4 py-3 text-gray-600">40 jam</td>
                   <td className="px-4 py-3">
-                    <span className="px-2 py-1 text-xs font-medium bg-emerald-100 text-emerald-700 rounded-full">Aktif</span>
+                    <StatusBadge status="Aktif" />
                   </td>
                 </tr>
               ))}

@@ -1,4 +1,6 @@
 import { UserX, FileText, AlertTriangle, CheckCircle } from 'lucide-react';
+import { useToast } from '../components/Toast';
+import { PageHeader, StatCard, StatusBadge } from '../components/ui';
 
 const resignRecords = [
   { id: '1', name: 'Rudi Hermawan', position: 'Barista', department: 'Operasional', resignDate: '2024-01-10', lastDay: '2024-02-10', reason: 'Pindah domisili', status: 'Proses', handover: 'Belum', notice: '30 hari' },
@@ -7,68 +9,27 @@ const resignRecords = [
 ];
 
 export default function Resign() {
-  const statusBadge = (status: string) => {
-    switch (status) {
-      case 'Proses': return 'bg-amber-100 text-amber-700';
-      case 'Selesai': return 'bg-emerald-100 text-emerald-700';
-      default: return 'bg-gray-100 text-gray-700';
-    }
-  };
+  const { showToast } = useToast();
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold text-gray-800">Resign & Exit</h1>
-          <p className="text-sm text-gray-500">Kelola proses pengunduran diri karyawan</p>
-        </div>
-        <button className="flex items-center gap-2 px-4 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">
-          <UserX size={16} /> Proses Resign
-        </button>
-      </div>
+    <div>
+      <PageHeader
+        title="Resign & Exit"
+        subtitle="Kelola proses pengunduran diri karyawan"
+        icon={<UserX size={20} />}
+        actionLabel="Proses Resign"
+        onAction={() => showToast('info', 'Proses Resign', 'Form proses resign akan segera tersedia')}
+      />
 
-      {/* Summary */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-amber-100 rounded-lg"><AlertTriangle size={16} className="text-amber-600" /></div>
-            <div>
-              <p className="text-lg font-bold text-gray-800">{resignRecords.filter(r => r.status === 'Proses').length}</p>
-              <p className="text-xs text-gray-500">Dalam Proses</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-emerald-100 rounded-lg"><CheckCircle size={16} className="text-emerald-600" /></div>
-            <div>
-              <p className="text-lg font-bold text-gray-800">{resignRecords.filter(r => r.status === 'Selesai').length}</p>
-              <p className="text-xs text-gray-500">Selesai</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-blue-100 rounded-lg"><FileText size={16} className="text-blue-600" /></div>
-            <div>
-              <p className="text-lg font-bold text-gray-800">{resignRecords.filter(r => r.handover === 'Belum').length}</p>
-              <p className="text-xs text-gray-500">Handover Pending</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-red-100 rounded-lg"><UserX size={16} className="text-red-600" /></div>
-            <div>
-              <p className="text-lg font-bold text-gray-800">{resignRecords.length}</p>
-              <p className="text-xs text-gray-500">Total (6 bulan)</p>
-            </div>
-          </div>
-        </div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+        <StatCard label="Dalam Proses" value={resignRecords.filter(r => r.status === 'Proses').length} icon={<AlertTriangle size={16} />} color="amber" />
+        <StatCard label="Selesai" value={resignRecords.filter(r => r.status === 'Selesai').length} icon={<CheckCircle size={16} />} color="emerald" />
+        <StatCard label="Handover Pending" value={resignRecords.filter(r => r.handover === 'Belum').length} icon={<FileText size={16} />} color="blue" />
+        <StatCard label="Total (6 bulan)" value={resignRecords.length} icon={<UserX size={16} />} color="red" />
       </div>
 
       {/* Exit Checklist */}
-      <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
+      <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm mb-6">
         <h3 className="text-sm font-semibold text-gray-800 mb-4">Exit Checklist</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {[
@@ -126,14 +87,10 @@ export default function Resign() {
                   <td className="px-4 py-3 text-gray-600">{new Date(record.lastDay).toLocaleDateString('id-ID')}</td>
                   <td className="px-4 py-3 text-gray-600">{record.reason}</td>
                   <td className="px-4 py-3">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${record.handover === 'Sudah' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
-                      {record.handover}
-                    </span>
+                    <StatusBadge status={record.handover} />
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusBadge(record.status)}`}>
-                      {record.status}
-                    </span>
+                    <StatusBadge status={record.status} />
                   </td>
                 </tr>
               ))}

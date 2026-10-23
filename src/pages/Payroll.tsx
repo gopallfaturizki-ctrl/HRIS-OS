@@ -1,112 +1,84 @@
 import { useState } from 'react';
-import { DollarSign, Download, FileText, CheckCircle, Clock, Printer } from 'lucide-react';
-import { payrollRecords } from '../data/mockData';
+import { DollarSign, Download, FileText, Printer } from 'lucide-react';
+import { useStore } from '../store/StoreProvider';
+import { useToast } from '../components/Toast';
+import { PageHeader, StatCard, StatusBadge, SearchFilter } from '../components/ui';
 
 export default function Payroll() {
+  const store = useStore();
+  const { showToast } = useToast();
   const [filterStatus, setFilterStatus] = useState('');
-  const [selectedPeriod] = useState('Januari 2024');
+  const selectedPeriod = 'Januari 2024';
 
-  const filtered = payrollRecords.filter(r => !filterStatus || r.status === filterStatus);
-
-  const totalPayroll = payrollRecords.reduce((sum, r) => sum + r.netSalary, 0);
-  const totalBasic = payrollRecords.reduce((sum, r) => sum + r.basicSalary, 0);
-  const totalAllowances = payrollRecords.reduce((sum, r) => sum + r.allowances, 0);
-  const totalDeductions = payrollRecords.reduce((sum, r) => sum + r.deductions, 0);
-
-  const statusBadge = (status: string) => {
-    switch (status) {
-      case 'Draft': return 'bg-gray-100 text-gray-700';
-      case 'Approved': return 'bg-blue-100 text-blue-700';
-      case 'Paid': return 'bg-emerald-100 text-emerald-700';
-      default: return 'bg-gray-100 text-gray-700';
-    }
-  };
+  const filtered = store.payroll.filter(r => !filterStatus || r.status === filterStatus);
+  const totalPayroll = store.payroll.reduce((sum, r) => sum + r.netSalary, 0);
+  const totalBasic = store.payroll.reduce((sum, r) => sum + r.basicSalary, 0);
+  const totalAllowances = store.payroll.reduce((sum, r) => sum + r.allowances, 0);
+  const totalDeductions = store.payroll.reduce((sum, r) => sum + r.deductions, 0);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold text-gray-800">Payroll</h1>
-          <p className="text-sm text-gray-500">Kelola penggajian karyawan - Periode: {selectedPeriod}</p>
-        </div>
-        <div className="flex gap-2">
-          <button className="flex items-center gap-2 px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg hover:bg-gray-50">
-            <Printer size={16} /> Cetak
-          </button>
-          <button className="flex items-center gap-2 px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg hover:bg-gray-50">
-            <Download size={16} /> Export
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">
-            <FileText size={16} /> Buat Payroll
-          </button>
-        </div>
-      </div>
+    <div>
+      <PageHeader
+        title="Payroll"
+        subtitle={`Kelola penggajian karyawan - Periode: ${selectedPeriod}`}
+        icon={<DollarSign size={20} />}
+        actionLabel="Buat Payroll"
+        onAction={() => showToast('info', 'Buat Payroll', 'Form payroll akan segera tersedia')}
+      >
+        <button
+          onClick={() => showToast('info', 'Cetak', 'Mencetak payroll...')}
+          className="flex items-center gap-2 px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition"
+        >
+          <Printer size={16} /> Cetak
+        </button>
+        <button
+          onClick={() => showToast('info', 'Export', 'Export payroll...')}
+          className="flex items-center gap-2 px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition"
+        >
+          <Download size={16} /> Export
+        </button>
+      </PageHeader>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
         <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-4 text-white">
           <DollarSign size={20} className="mb-2 opacity-80" />
           <p className="text-lg font-bold">{formatCurrency(totalPayroll)}</p>
           <p className="text-xs text-emerald-100 mt-1">Total Payroll</p>
         </div>
-        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-          <p className="text-lg font-bold text-gray-800">{formatCurrency(totalBasic)}</p>
-          <p className="text-xs text-gray-500 mt-1">Total Gaji Pokok</p>
-        </div>
-        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-          <p className="text-lg font-bold text-blue-600">{formatCurrency(totalAllowances)}</p>
-          <p className="text-xs text-gray-500 mt-1">Total Tunjangan</p>
-        </div>
-        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-          <p className="text-lg font-bold text-red-600">{formatCurrency(totalDeductions)}</p>
-          <p className="text-xs text-gray-500 mt-1">Total Potongan</p>
-        </div>
+        <StatCard label="Total Gaji Pokok" value={formatCurrency(totalBasic)} color="blue" />
+        <StatCard label="Total Tunjangan" value={formatCurrency(totalAllowances)} color="cyan" />
+        <StatCard label="Total Potongan" value={formatCurrency(totalDeductions)} color="red" />
       </div>
 
-      {/* Status Summary */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm flex items-center gap-3">
-          <div className="p-2 bg-gray-100 rounded-lg"><Clock size={16} className="text-gray-600" /></div>
-          <div>
-            <p className="font-bold text-gray-800">{payrollRecords.filter(r => r.status === 'Draft').length}</p>
-            <p className="text-xs text-gray-500">Draft</p>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm flex items-center gap-3">
-          <div className="p-2 bg-blue-100 rounded-lg"><FileText size={16} className="text-blue-600" /></div>
-          <div>
-            <p className="font-bold text-gray-800">{payrollRecords.filter(r => r.status === 'Approved').length}</p>
-            <p className="text-xs text-gray-500">Approved</p>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm flex items-center gap-3">
-          <div className="p-2 bg-emerald-100 rounded-lg"><CheckCircle size={16} className="text-emerald-600" /></div>
-          <div>
-            <p className="font-bold text-gray-800">{payrollRecords.filter(r => r.status === 'Paid').length}</p>
-            <p className="text-xs text-gray-500">Dibayar</p>
-          </div>
-        </div>
+      <div className="grid grid-cols-3 gap-3 mb-4">
+        <StatCard label="Draft" value={store.payroll.filter(r => r.status === 'Draft').length} color="amber" />
+        <StatCard label="Approved" value={store.payroll.filter(r => r.status === 'Approved').length} color="blue" />
+        <StatCard label="Dibayar" value={store.payroll.filter(r => r.status === 'Paid').length} color="emerald" />
       </div>
 
-      {/* Table */}
+      <SearchFilter
+        searchValue=""
+        onSearchChange={() => {}}
+        filters={[
+          {
+            value: filterStatus,
+            onChange: setFilterStatus,
+            options: [
+              { label: 'Draft', value: 'Draft' },
+              { label: 'Approved', value: 'Approved' },
+              { label: 'Paid', value: 'Paid' },
+            ],
+            placeholder: 'Semua Status',
+          },
+        ]}
+        onClear={() => setFilterStatus('')}
+      />
+
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-gray-800">Detail Payroll - {selectedPeriod}</h3>
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-          >
-            <option value="">Semua Status</option>
-            <option value="Draft">Draft</option>
-            <option value="Approved">Approved</option>
-            <option value="Paid">Paid</option>
-          </select>
-        </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-100">
@@ -119,6 +91,7 @@ export default function Payroll() {
                 <th className="text-right px-4 py-3 font-medium text-gray-600">Pajak</th>
                 <th className="text-right px-4 py-3 font-medium text-gray-600">Gaji Bersih</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-600">Aksi</th>
               </tr>
             </thead>
             <tbody>
@@ -132,9 +105,19 @@ export default function Payroll() {
                   <td className="px-4 py-3 text-right text-orange-600">{formatCurrency(record.tax)}</td>
                   <td className="px-4 py-3 text-right font-bold text-emerald-700">{formatCurrency(record.netSalary)}</td>
                   <td className="px-4 py-3">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusBadge(record.status)}`}>
-                      {record.status}
-                    </span>
+                    <StatusBadge status={record.status} type="payroll" />
+                  </td>
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() => {
+                        const nextStatus = record.status === 'Draft' ? 'Approved' : record.status === 'Approved' ? 'Paid' : 'Paid';
+                        store.updatePayrollStatus(record.id, nextStatus);
+                        showToast('success', 'Status Diperbarui', `${record.employeeName} - ${nextStatus}`);
+                      }}
+                      className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+                    >
+                      {record.status === 'Draft' ? 'Approve' : record.status === 'Approved' ? 'Bayar' : 'Selesai'}
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -144,10 +127,11 @@ export default function Payroll() {
                 <td className="px-4 py-3 font-bold text-gray-800">TOTAL</td>
                 <td className="px-4 py-3 text-right font-bold text-gray-800">{formatCurrency(totalBasic)}</td>
                 <td className="px-4 py-3 text-right font-bold text-blue-600">{formatCurrency(totalAllowances)}</td>
-                <td className="px-4 py-3 text-right font-bold text-indigo-600">{formatCurrency(payrollRecords.reduce((s, r) => s + r.overtime, 0))}</td>
+                <td className="px-4 py-3 text-right font-bold text-indigo-600">{formatCurrency(store.payroll.reduce((s, r) => s + r.overtime, 0))}</td>
                 <td className="px-4 py-3 text-right font-bold text-red-600">{formatCurrency(totalDeductions)}</td>
-                <td className="px-4 py-3 text-right font-bold text-orange-600">{formatCurrency(payrollRecords.reduce((s, r) => s + r.tax, 0))}</td>
+                <td className="px-4 py-3 text-right font-bold text-orange-600">{formatCurrency(store.payroll.reduce((s, r) => s + r.tax, 0))}</td>
                 <td className="px-4 py-3 text-right font-bold text-emerald-700">{formatCurrency(totalPayroll)}</td>
+                <td className="px-4 py-3"></td>
                 <td className="px-4 py-3"></td>
               </tr>
             </tfoot>

@@ -1,123 +1,90 @@
 import { useState } from 'react';
-import { Search, Calendar, Download, CheckCircle, XCircle, Clock } from 'lucide-react';
-import { attendanceRecords } from '../data/mockData';
+import { Clock, Download, Calendar } from 'lucide-react';
+import { useStore } from '../store/StoreProvider';
+import { useToast } from '../components/Toast';
+import { PageHeader, StatCard, StatusBadge, SearchFilter } from '../components/ui';
 
 export default function Attendance() {
+  const store = useStore();
+  const { showToast } = useToast();
   const [selectedDate, setSelectedDate] = useState('2024-01-15');
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
 
-  const filtered = attendanceRecords.filter(r => {
+  const filtered = store.attendance.filter(r => {
     const matchSearch = r.employeeName.toLowerCase().includes(search.toLowerCase());
     const matchStatus = !filterStatus || r.status === filterStatus;
     return matchSearch && matchStatus;
   });
 
   const summary = {
-    hadir: attendanceRecords.filter(r => r.status === 'Hadir').length,
-    terlambat: attendanceRecords.filter(r => r.status === 'Terlambat').length,
-    izin: attendanceRecords.filter(r => r.status === 'Izin').length,
-    sakit: attendanceRecords.filter(r => r.status === 'Sakit').length,
-    alpha: attendanceRecords.filter(r => r.status === 'Alpha').length,
-  };
-
-  const statusIcon = (status: string) => {
-    switch (status) {
-      case 'Hadir': return <CheckCircle size={14} className="text-emerald-500" />;
-      case 'Terlambat': return <Clock size={14} className="text-amber-500" />;
-      case 'Izin': return <CheckCircle size={14} className="text-blue-500" />;
-      case 'Sakit': return <XCircle size={14} className="text-purple-500" />;
-      case 'Alpha': return <XCircle size={14} className="text-red-500" />;
-      default: return null;
-    }
-  };
-
-  const statusBadge = (status: string) => {
-    switch (status) {
-      case 'Hadir': return 'bg-emerald-100 text-emerald-700';
-      case 'Terlambat': return 'bg-amber-100 text-amber-700';
-      case 'Izin': return 'bg-blue-100 text-blue-700';
-      case 'Sakit': return 'bg-purple-100 text-purple-700';
-      case 'Alpha': return 'bg-red-100 text-red-700';
-      default: return 'bg-gray-100 text-gray-700';
-    }
+    hadir: store.attendance.filter(r => r.status === 'Hadir').length,
+    terlambat: store.attendance.filter(r => r.status === 'Terlambat').length,
+    izin: store.attendance.filter(r => r.status === 'Izin').length,
+    sakit: store.attendance.filter(r => r.status === 'Sakit').length,
+    alpha: store.attendance.filter(r => r.status === 'Alpha').length,
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold text-gray-800">Absensi Karyawan</h1>
-          <p className="text-sm text-gray-500">Monitoring kehadiran karyawan harian</p>
-        </div>
-        <div className="flex gap-2">
-          <button className="flex items-center gap-2 px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg hover:bg-gray-50">
-            <Download size={16} /> Export
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">
-            <CheckCircle size={16} /> Input Absensi
-          </button>
-        </div>
-      </div>
+    <div>
+      <PageHeader
+        title="Absensi Karyawan"
+        subtitle="Monitoring kehadiran karyawan harian"
+        icon={<Clock size={20} />}
+        actionLabel="Input Absensi"
+        onAction={() => showToast('info', 'Input Absensi', 'Form input absensi akan segera tersedia')}
+      >
+        <button
+          onClick={() => showToast('info', 'Export', 'Fitur export akan segera tersedia')}
+          className="flex items-center gap-2 px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition"
+        >
+          <Download size={16} /> Export
+        </button>
+      </PageHeader>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 text-center">
-          <p className="text-2xl font-bold text-emerald-700">{summary.hadir}</p>
-          <p className="text-xs text-emerald-600 mt-1">Hadir</p>
-        </div>
-        <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 text-center">
-          <p className="text-2xl font-bold text-amber-700">{summary.terlambat}</p>
-          <p className="text-xs text-amber-600 mt-1">Terlambat</p>
-        </div>
-        <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-center">
-          <p className="text-2xl font-bold text-blue-700">{summary.izin}</p>
-          <p className="text-xs text-blue-600 mt-1">Izin</p>
-        </div>
-        <div className="bg-purple-50 border border-purple-100 rounded-xl p-4 text-center">
-          <p className="text-2xl font-bold text-purple-700">{summary.sakit}</p>
-          <p className="text-xs text-purple-600 mt-1">Sakit</p>
-        </div>
-        <div className="bg-red-50 border border-red-100 rounded-xl p-4 text-center">
-          <p className="text-2xl font-bold text-red-700">{summary.alpha}</p>
-          <p className="text-xs text-red-600 mt-1">Alpha</p>
-        </div>
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-4">
+        <StatCard label="Hadir" value={summary.hadir} color="emerald" />
+        <StatCard label="Terlambat" value={summary.terlambat} color="amber" />
+        <StatCard label="Izin" value={summary.izin} color="blue" />
+        <StatCard label="Sakit" value={summary.sakit} color="purple" />
+        <StatCard label="Alpha" value={summary.alpha} color="red" />
       </div>
 
-      {/* Filters */}
-      <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Cari nama karyawan..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <Calendar size={16} className="text-gray-400" />
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-            />
-          </div>
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-          >
-            <option value="">Semua Status</option>
-            <option value="Hadir">Hadir</option>
-            <option value="Terlambat">Terlambat</option>
-            <option value="Izin">Izin</option>
-            <option value="Sakit">Sakit</option>
-            <option value="Alpha">Alpha</option>
-          </select>
+      <SearchFilter
+        searchValue={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Cari nama karyawan..."
+        filters={[
+          {
+            value: filterStatus,
+            onChange: setFilterStatus,
+            options: [
+              { label: 'Hadir', value: 'Hadir' },
+              { label: 'Terlambat', value: 'Terlambat' },
+              { label: 'Izin', value: 'Izin' },
+              { label: 'Sakit', value: 'Sakit' },
+              { label: 'Alpha', value: 'Alpha' },
+            ],
+            placeholder: 'Semua Status',
+          },
+        ]}
+        onClear={() => {
+          setSearch('');
+          setFilterStatus('');
+        }}
+      />
+
+      {/* Date Picker */}
+      <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm mb-4">
+        <div className="flex items-center gap-2">
+          <Calendar size={16} className="text-gray-400" />
+          <input
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition"
+          />
         </div>
       </div>
 
@@ -156,10 +123,7 @@ export default function Attendance() {
                     <td className="px-4 py-3 text-gray-600 font-mono">{record.checkOut}</td>
                     <td className="px-4 py-3 text-gray-600 font-medium">{totalHours}</td>
                     <td className="px-4 py-3">
-                      <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full ${statusBadge(record.status)}`}>
-                        {statusIcon(record.status)}
-                        {record.status}
-                      </span>
+                      <StatusBadge status={record.status} type="attendance" />
                     </td>
                     <td className="px-4 py-3 text-gray-500 text-xs">{record.notes || '-'}</td>
                   </tr>

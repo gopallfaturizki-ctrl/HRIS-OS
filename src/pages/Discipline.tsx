@@ -1,98 +1,50 @@
-import { AlertTriangle, Plus, FileWarning, Shield } from 'lucide-react';
-import { disciplineRecords } from '../data/mockData';
+import { AlertTriangle, FileWarning, Shield } from 'lucide-react';
+import { useStore } from '../store/StoreProvider';
+import { useToast } from '../components/Toast';
+import { PageHeader, StatCard, StatusBadge } from '../components/ui';
 
 export default function Discipline() {
-  const categoryColor = (category: string) => {
-    switch (category) {
-      case 'Ringan': return 'bg-amber-100 text-amber-700 border-amber-200';
-      case 'Sedang': return 'bg-orange-100 text-orange-700 border-orange-200';
-      case 'Berat': return 'bg-red-100 text-red-700 border-red-200';
-      default: return 'bg-gray-100 text-gray-700 border-gray-200';
-    }
-  };
-
-  const statusColor = (status: string) => {
-    switch (status) {
-      case 'SP1': return 'bg-amber-100 text-amber-700';
-      case 'SP2': return 'bg-orange-100 text-orange-700';
-      case 'SP3': return 'bg-red-100 text-red-700';
-      case 'PHK': return 'bg-red-200 text-red-800';
-      default: return 'bg-gray-100 text-gray-700';
-    }
-  };
+  const store = useStore();
+  const { showToast } = useToast();
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold text-gray-800">Disiplin & Sanksi</h1>
-          <p className="text-sm text-gray-500">Kelola pelanggaran dan tindakan disipliner karyawan</p>
-        </div>
-        <button className="flex items-center gap-2 px-4 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">
-          <Plus size={16} /> Catat Pelanggaran
-        </button>
+    <div>
+      <PageHeader
+        title="Disiplin & Sanksi"
+        subtitle="Kelola pelanggaran dan tindakan disipliner karyawan"
+        icon={<AlertTriangle size={20} />}
+        actionLabel="Catat Pelanggaran"
+        onAction={() => showToast('info', 'Catat Pelanggaran', 'Form pencatatan pelanggaran akan segera tersedia')}
+      />
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+        <StatCard label="Ringan" value={store.discipline.filter(d => d.category === 'Ringan').length} icon={<AlertTriangle size={16} />} color="amber" />
+        <StatCard label="Sedang" value={store.discipline.filter(d => d.category === 'Sedang').length} icon={<FileWarning size={16} />} color="orange" />
+        <StatCard label="Berat" value={store.discipline.filter(d => d.category === 'Berat').length} icon={<Shield size={16} />} color="red" />
+        <StatCard label="Total Kasus" value={store.discipline.length} icon={<FileWarning size={16} />} color="purple" />
       </div>
 
-      {/* Summary */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-amber-100 rounded-lg"><AlertTriangle size={16} className="text-amber-600" /></div>
-            <div>
-              <p className="text-lg font-bold text-gray-800">{disciplineRecords.filter(d => d.category === 'Ringan').length}</p>
-              <p className="text-xs text-gray-500">Ringan</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-orange-100 rounded-lg"><FileWarning size={16} className="text-orange-600" /></div>
-            <div>
-              <p className="text-lg font-bold text-gray-800">{disciplineRecords.filter(d => d.category === 'Sedang').length}</p>
-              <p className="text-xs text-gray-500">Sedang</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-red-100 rounded-lg"><Shield size={16} className="text-red-600" /></div>
-            <div>
-              <p className="text-lg font-bold text-gray-800">{disciplineRecords.filter(d => d.category === 'Berat').length}</p>
-              <p className="text-xs text-gray-500">Berat</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-gray-100 rounded-lg"><FileWarning size={16} className="text-gray-600" /></div>
-            <div>
-              <p className="text-lg font-bold text-gray-800">{disciplineRecords.length}</p>
-              <p className="text-xs text-gray-500">Total Kasus</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Discipline Cards */}
-      <div className="space-y-4">
-        {disciplineRecords.map((record) => (
+      <div className="space-y-4 mb-6">
+        {store.discipline.map((record) => (
           <div key={record.id} className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="flex items-start gap-4">
-                <div className={`p-3 rounded-xl border ${categoryColor(record.category)}`}>
+                <div className={`p-3 rounded-xl border ${
+                  record.category === 'Ringan' ? 'bg-amber-100 text-amber-700 border-amber-200' :
+                  record.category === 'Sedang' ? 'bg-orange-100 text-orange-700 border-orange-200' :
+                  'bg-red-100 text-red-700 border-red-200'
+                }`}>
                   <AlertTriangle size={20} />
                 </div>
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <h4 className="font-semibold text-gray-800">{record.employeeName}</h4>
-                    <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${statusColor(record.status)}`}>
-                      {record.status}
-                    </span>
+                    <StatusBadge status={record.status} type="discipline" />
                   </div>
                   <p className="text-sm text-gray-600 mb-1">{record.violation}</p>
                   <div className="flex items-center gap-4 text-xs text-gray-500">
                     <span>📅 {new Date(record.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
-                    <span className={`px-2 py-0.5 rounded-full border ${categoryColor(record.category)}`}>{record.category}</span>
+                    <StatusBadge status={record.category} type="discipline" />
                   </div>
                 </div>
               </div>
