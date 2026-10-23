@@ -49,13 +49,35 @@ export default function Employees() {
         }}
       >
         <button
-          onClick={() => showToast('info', 'Import', 'Fitur import CSV akan segera tersedia')}
+          onClick={() => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.csv';
+            input.onchange = (e) => {
+              const file = (e.target as HTMLInputElement).files?.[0];
+              if (file) {
+                showToast('success', 'Import Berhasil', `File ${file.name} telah diimport (simulasi)`);
+              }
+            };
+            input.click();
+          }}
           className="flex items-center gap-2 px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition"
         >
           <Upload size={16} /> Import
         </button>
         <button
-          onClick={() => showToast('info', 'Export', 'Fitur export akan segera tersedia')}
+          onClick={() => {
+            const headers = ['NIK', 'Nama', 'Email', 'Telepon', 'Departemen', 'Jabatan', 'Status', 'Tanggal Bergabung'];
+            const rows = store.employees.map(e => [e.nik, e.name, e.email, e.phone, e.department, e.position, e.status, e.joinDate]);
+            const csvContent = [headers.join(','), ...rows.map(row => row.map(cell => `"${cell}"`).join(','))].join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'data-karyawan.csv';
+            link.click();
+            URL.revokeObjectURL(link.href);
+            showToast('success', 'Export Berhasil', 'File CSV telah diunduh');
+          }}
           className="flex items-center gap-2 px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition"
         >
           <Download size={16} /> Export
