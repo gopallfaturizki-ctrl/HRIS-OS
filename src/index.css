@@ -76,3 +76,18 @@ input:focus, select:focus, button:focus-visible {
 .animate-modal-in {
   animation: modalIn 0.2s ease-out;
 }
+
+/* Ensure consistent spacing */
+.space-y-6 > * + * {
+  margin-top: 1.5rem;
+}
+
+/* Grid consistency */
+.grid {
+  gap: 1rem;
+}
+
+/* Card consistency */
+.bg-white {
+  border-radius: 0.75rem;
+}

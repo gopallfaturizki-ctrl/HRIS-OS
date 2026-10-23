@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { DollarSign, Download, FileText, Printer } from 'lucide-react';
 import { useStore } from '../store/StoreProvider';
 import { useToast } from '../components/Toast';
-import { PageHeader, StatCard, StatusBadge, SearchFilter } from '../components/ui';
+import { PageHeader, StatCard, StatusBadge, SearchFilter, Table } from '../components/ui';
 
 export default function Payroll() {
   const store = useStore();
@@ -78,64 +78,58 @@ export default function Payroll() {
         onClear={() => setFilterStatus('')}
       />
 
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-100">
-              <tr>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Karyawan</th>
-                <th className="text-right px-4 py-3 font-medium text-gray-600">Gaji Pokok</th>
-                <th className="text-right px-4 py-3 font-medium text-gray-600">Tunjangan</th>
-                <th className="text-right px-4 py-3 font-medium text-gray-600">Lembur</th>
-                <th className="text-right px-4 py-3 font-medium text-gray-600">Potongan</th>
-                <th className="text-right px-4 py-3 font-medium text-gray-600">Pajak</th>
-                <th className="text-right px-4 py-3 font-medium text-gray-600">Gaji Bersih</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((record) => (
-                <tr key={record.id} className="border-b border-gray-50 hover:bg-gray-50/50">
-                  <td className="px-4 py-3 font-medium text-gray-800">{record.employeeName}</td>
-                  <td className="px-4 py-3 text-right text-gray-600">{formatCurrency(record.basicSalary)}</td>
-                  <td className="px-4 py-3 text-right text-blue-600">{formatCurrency(record.allowances)}</td>
-                  <td className="px-4 py-3 text-right text-indigo-600">{formatCurrency(record.overtime)}</td>
-                  <td className="px-4 py-3 text-right text-red-600">{formatCurrency(record.deductions)}</td>
-                  <td className="px-4 py-3 text-right text-orange-600">{formatCurrency(record.tax)}</td>
-                  <td className="px-4 py-3 text-right font-bold text-emerald-700">{formatCurrency(record.netSalary)}</td>
-                  <td className="px-4 py-3">
-                    <StatusBadge status={record.status} type="payroll" />
-                  </td>
-                  <td className="px-4 py-3">
-                    <button
-                      onClick={() => {
-                        const nextStatus = record.status === 'Draft' ? 'Approved' : record.status === 'Approved' ? 'Paid' : 'Paid';
-                        store.updatePayrollStatus(record.id, nextStatus);
-                        showToast('success', 'Status Diperbarui', `${record.employeeName} - ${nextStatus}`);
-                      }}
-                      className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition"
-                    >
-                      {record.status === 'Draft' ? 'Approve' : record.status === 'Approved' ? 'Bayar' : 'Selesai'}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-            <tfoot className="bg-gray-50 border-t-2 border-gray-200">
-              <tr>
-                <td className="px-4 py-3 font-bold text-gray-800">TOTAL</td>
-                <td className="px-4 py-3 text-right font-bold text-gray-800">{formatCurrency(totalBasic)}</td>
-                <td className="px-4 py-3 text-right font-bold text-blue-600">{formatCurrency(totalAllowances)}</td>
-                <td className="px-4 py-3 text-right font-bold text-indigo-600">{formatCurrency(store.payroll.reduce((s, r) => s + r.overtime, 0))}</td>
-                <td className="px-4 py-3 text-right font-bold text-red-600">{formatCurrency(totalDeductions)}</td>
-                <td className="px-4 py-3 text-right font-bold text-orange-600">{formatCurrency(store.payroll.reduce((s, r) => s + r.tax, 0))}</td>
-                <td className="px-4 py-3 text-right font-bold text-emerald-700">{formatCurrency(totalPayroll)}</td>
-                <td className="px-4 py-3"></td>
-                <td className="px-4 py-3"></td>
-              </tr>
-            </tfoot>
-          </table>
+      <Table
+        headers={['Karyawan', 'Gaji Pokok', 'Tunjangan', 'Lembur', 'Potongan', 'Pajak', 'Gaji Bersih', 'Status', 'Aksi']}
+        isEmpty={filtered.length === 0}
+        emptyMessage="Tidak ada data payroll"
+      >
+        {filtered.map((record) => (
+          <tr key={record.id} className="hover:bg-slate-50 transition">
+            <td className="px-4 py-3 font-medium text-slate-800">{record.employeeName}</td>
+            <td className="px-4 py-3 text-right text-slate-600">{formatCurrency(record.basicSalary)}</td>
+            <td className="px-4 py-3 text-right text-blue-600">{formatCurrency(record.allowances)}</td>
+            <td className="px-4 py-3 text-right text-indigo-600">{formatCurrency(record.overtime)}</td>
+            <td className="px-4 py-3 text-right text-red-600">{formatCurrency(record.deductions)}</td>
+            <td className="px-4 py-3 text-right text-orange-600">{formatCurrency(record.tax)}</td>
+            <td className="px-4 py-3 text-right font-bold text-emerald-700">{formatCurrency(record.netSalary)}</td>
+            <td className="px-4 py-3">
+              <StatusBadge status={record.status} type="payroll" />
+            </td>
+            <td className="px-4 py-3">
+              <button
+                onClick={() => {
+                  const nextStatus = record.status === 'Draft' ? 'Approved' : record.status === 'Approved' ? 'Paid' : 'Paid';
+                  store.updatePayrollStatus(record.id, nextStatus);
+                  showToast('success', 'Status Diperbarui', `${record.employeeName} - ${nextStatus}`);
+                }}
+                className="px-3 py-1.5 text-xs font-medium bg-blue-500 text-white rounded-md hover:bg-blue-600 transition shadow-sm"
+              >
+                {record.status === 'Draft' ? 'Approve' : record.status === 'Approved' ? 'Bayar' : 'Selesai'}
+              </button>
+            </td>
+          </tr>
+        ))}
+      </Table>
+
+      {/* Total Summary */}
+      <div className="mt-4 bg-slate-50 border border-slate-200 rounded-xl p-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+          <div>
+            <p className="text-slate-500 text-xs">Total Gaji Pokok</p>
+            <p className="font-bold text-slate-800">{formatCurrency(totalBasic)}</p>
+          </div>
+          <div>
+            <p className="text-slate-500 text-xs">Total Tunjangan</p>
+            <p className="font-bold text-blue-600">{formatCurrency(totalAllowances)}</p>
+          </div>
+          <div>
+            <p className="text-slate-500 text-xs">Total Potongan</p>
+            <p className="font-bold text-red-600">{formatCurrency(totalDeductions)}</p>
+          </div>
+          <div>
+            <p className="text-slate-500 text-xs">Total Payroll</p>
+            <p className="font-bold text-emerald-700">{formatCurrency(totalPayroll)}</p>
+          </div>
         </div>
       </div>
     </div>

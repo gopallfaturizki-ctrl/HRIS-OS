@@ -1,6 +1,6 @@
 import { UserX, FileText, AlertTriangle, CheckCircle } from 'lucide-react';
 import { useToast } from '../components/Toast';
-import { PageHeader, StatCard, StatusBadge } from '../components/ui';
+import { PageHeader, StatCard, StatusBadge, Table } from '../components/ui';
 
 const resignRecords = [
   { id: '1', name: 'Rudi Hermawan', position: 'Barista', department: 'Operasional', resignDate: '2024-01-10', lastDay: '2024-02-10', reason: 'Pindah domisili', status: 'Proses', handover: 'Belum', notice: '30 hari' },
@@ -56,47 +56,36 @@ export default function Resign() {
       </div>
 
       {/* Resign Records */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-gray-100">
-          <h3 className="text-sm font-semibold text-gray-800">Riwayat Resign</h3>
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
+        <div className="p-5 border-b border-slate-200">
+          <h3 className="text-sm font-semibold text-slate-800">Riwayat Resign</h3>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-100">
-              <tr>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Karyawan</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Jabatan</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Tgl Resign</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Hari Terakhir</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Alasan</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Handover</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {resignRecords.map((record) => (
-                <tr key={record.id} className="border-b border-gray-50 hover:bg-gray-50/50">
-                  <td className="px-4 py-3">
-                    <div>
-                      <p className="font-medium text-gray-800">{record.name}</p>
-                      <p className="text-xs text-gray-500">{record.department}</p>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-gray-600">{record.position}</td>
-                  <td className="px-4 py-3 text-gray-600">{new Date(record.resignDate).toLocaleDateString('id-ID')}</td>
-                  <td className="px-4 py-3 text-gray-600">{new Date(record.lastDay).toLocaleDateString('id-ID')}</td>
-                  <td className="px-4 py-3 text-gray-600">{record.reason}</td>
-                  <td className="px-4 py-3">
-                    <StatusBadge status={record.handover} />
-                  </td>
-                  <td className="px-4 py-3">
-                    <StatusBadge status={record.status} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Table
+          headers={['Karyawan', 'Jabatan', 'Tgl Resign', 'Hari Terakhir', 'Alasan', 'Handover', 'Status']}
+          isEmpty={resignRecords.length === 0}
+          emptyMessage="Tidak ada data resign"
+        >
+          {resignRecords.map((record) => (
+            <tr key={record.id} className="hover:bg-slate-50 transition">
+              <td className="px-4 py-3">
+                <div>
+                  <p className="font-medium text-slate-800">{record.name}</p>
+                  <p className="text-xs text-slate-500">{record.department}</p>
+                </div>
+              </td>
+              <td className="px-4 py-3 text-slate-600">{record.position}</td>
+              <td className="px-4 py-3 text-slate-600">{new Date(record.resignDate).toLocaleDateString('id-ID')}</td>
+              <td className="px-4 py-3 text-slate-600">{new Date(record.lastDay).toLocaleDateString('id-ID')}</td>
+              <td className="px-4 py-3 text-slate-600">{record.reason}</td>
+              <td className="px-4 py-3">
+                <StatusBadge status={record.handover} />
+              </td>
+              <td className="px-4 py-3">
+                <StatusBadge status={record.status} />
+              </td>
+            </tr>
+          ))}
+        </Table>
       </div>
     </div>
   );

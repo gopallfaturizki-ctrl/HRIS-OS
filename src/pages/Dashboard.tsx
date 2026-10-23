@@ -1,7 +1,7 @@
 import { Users, UserCheck, UserX, Clock, Briefcase, CalendarClock, Timer, FileWarning, Activity, Award } from 'lucide-react';
 import { useStore } from '../store/StoreProvider';
 import { useToast } from '../components/Toast';
-import { PageHeader, StatCard, StatusBadge, ActionButtons } from '../components/ui';
+import { PageHeader, StatCard, StatusBadge, ActionButtons, Table } from '../components/ui';
 
 export default function Dashboard() {
   const store = useStore();
@@ -168,55 +168,45 @@ export default function Dashboard() {
       </div>
 
       {/* Pending Approvals */}
-      <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-gray-800">Menunggu Persetujuan</h3>
-          <span className="px-2 py-1 text-xs font-medium bg-amber-100 text-amber-700 rounded-full">
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
+        <div className="flex items-center justify-between p-5 border-b border-slate-200">
+          <h3 className="text-sm font-semibold text-slate-800">Menunggu Persetujuan</h3>
+          <span className="px-2.5 py-1 text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 rounded-md">
             {pendingLeaves.length} pending
           </span>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-gray-500 border-b">
-                <th className="pb-2 font-medium">Karyawan</th>
-                <th className="pb-2 font-medium">Tipe</th>
-                <th className="pb-2 font-medium">Tanggal</th>
-                <th className="pb-2 font-medium">Durasi</th>
-                <th className="pb-2 font-medium">Status</th>
-                <th className="pb-2 font-medium">Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pendingLeaves.map((leave) => (
-                <tr key={leave.id} className="border-b border-gray-50 hover:bg-gray-50/50">
-                  <td className="py-3 font-medium text-gray-800">{leave.employeeName}</td>
-                  <td className="py-3">
-                    <StatusBadge status={leave.type} />
-                  </td>
-                  <td className="py-3 text-gray-600">{leave.startDate} - {leave.endDate}</td>
-                  <td className="py-3 text-gray-600">{leave.days} hari</td>
-                  <td className="py-3">
-                    <StatusBadge status={leave.status} />
-                  </td>
-                  <td className="py-3">
-                    <ActionButtons
-                      showApproveReject
-                      onApprove={() => {
-                        store.approveLeave(leave.id);
-                        showToast('success', 'Cuti Disetujui', `${leave.employeeName} - ${leave.days} hari`);
-                      }}
-                      onReject={() => {
-                        store.rejectLeave(leave.id);
-                        showToast('error', 'Cuti Ditolak', `${leave.employeeName} - ${leave.days} hari`);
-                      }}
-                    />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Table
+          headers={['Karyawan', 'Tipe', 'Tanggal', 'Durasi', 'Status', 'Aksi']}
+          isEmpty={pendingLeaves.length === 0}
+          emptyMessage="Tidak ada pengajuan yang menunggu persetujuan"
+        >
+          {pendingLeaves.map((leave) => (
+            <tr key={leave.id} className="hover:bg-slate-50 transition">
+              <td className="px-4 py-3 font-medium text-slate-800">{leave.employeeName}</td>
+              <td className="px-4 py-3">
+                <StatusBadge status={leave.type} />
+              </td>
+              <td className="px-4 py-3 text-slate-600">{leave.startDate} - {leave.endDate}</td>
+              <td className="px-4 py-3 text-slate-600">{leave.days} hari</td>
+              <td className="px-4 py-3">
+                <StatusBadge status={leave.status} />
+              </td>
+              <td className="px-4 py-3">
+                <ActionButtons
+                  showApproveReject
+                  onApprove={() => {
+                    store.approveLeave(leave.id);
+                    showToast('success', 'Cuti Disetujui', `${leave.employeeName} - ${leave.days} hari`);
+                  }}
+                  onReject={() => {
+                    store.rejectLeave(leave.id);
+                    showToast('error', 'Cuti Ditolak', `${leave.employeeName} - ${leave.days} hari`);
+                  }}
+                />
+              </td>
+            </tr>
+          ))}
+        </Table>
       </div>
     </div>
   );

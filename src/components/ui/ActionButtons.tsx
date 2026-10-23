@@ -19,11 +19,11 @@ export default function ActionButtons({
 }: ActionButtonsProps) {
   if (showApproveReject) {
     return (
-      <div className="flex gap-1">
+      <div className="flex gap-1.5">
         {onApprove && (
           <button
             onClick={onApprove}
-            className="flex items-center gap-1 px-2 py-1 text-xs font-medium bg-emerald-500 text-white rounded hover:bg-emerald-600 transition"
+            className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-emerald-500 text-white rounded-md hover:bg-emerald-600 transition shadow-sm"
           >
             <Check size={12} />
             Approve
@@ -32,7 +32,7 @@ export default function ActionButtons({
         {onReject && (
           <button
             onClick={onReject}
-            className="flex items-center gap-1 px-2 py-1 text-xs font-medium bg-red-500 text-white rounded hover:bg-red-600 transition"
+            className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-red-500 text-white rounded-md hover:bg-red-600 transition shadow-sm"
           >
             <XIcon size={12} />
             Reject
@@ -47,7 +47,7 @@ export default function ActionButtons({
       {onView && (
         <button
           onClick={onView}
-          className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition"
+          className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition"
           title="Lihat Detail"
         >
           <Eye size={14} />
@@ -56,7 +56,7 @@ export default function ActionButtons({
       {onEdit && (
         <button
           onClick={onEdit}
-          className="p-1.5 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded transition"
+          className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-md transition"
           title="Edit"
         >
           <Edit size={14} />
@@ -65,7 +65,7 @@ export default function ActionButtons({
       {onDelete && (
         <button
           onClick={onDelete}
-          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition"
+          className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition"
           title="Hapus"
         >
           <Trash2 size={14} />

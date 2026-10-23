@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Clock, Download, Calendar } from 'lucide-react';
 import { useStore } from '../store/StoreProvider';
 import { useToast } from '../components/Toast';
-import { PageHeader, StatCard, StatusBadge, SearchFilter } from '../components/ui';
+import { PageHeader, StatCard, StatusBadge, SearchFilter, Table } from '../components/ui';
 
 export default function Attendance() {
   const store = useStore();
@@ -89,50 +89,37 @@ export default function Attendance() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-100">
-              <tr>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Karyawan</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Tanggal</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Check In</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Check Out</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Total Jam</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Keterangan</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((record) => {
-                const totalHours = record.checkIn !== '-' && record.checkOut !== '-'
-                  ? `${parseInt(record.checkOut) - parseInt(record.checkIn)}j`
-                  : '-';
-                return (
-                  <tr key={record.id} className="border-b border-gray-50 hover:bg-gray-50/50">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-emerald-400 to-cyan-500 flex items-center justify-center text-white text-xs font-bold">
-                          {record.employeeName.charAt(0)}
-                        </div>
-                        <span className="font-medium text-gray-800">{record.employeeName}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">{record.date}</td>
-                    <td className="px-4 py-3 text-gray-600 font-mono">{record.checkIn}</td>
-                    <td className="px-4 py-3 text-gray-600 font-mono">{record.checkOut}</td>
-                    <td className="px-4 py-3 text-gray-600 font-medium">{totalHours}</td>
-                    <td className="px-4 py-3">
-                      <StatusBadge status={record.status} type="attendance" />
-                    </td>
-                    <td className="px-4 py-3 text-gray-500 text-xs">{record.notes || '-'}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <Table
+        headers={['Karyawan', 'Tanggal', 'Check In', 'Check Out', 'Total Jam', 'Status', 'Keterangan']}
+        isEmpty={filtered.length === 0}
+        emptyMessage="Tidak ada data absensi"
+      >
+        {filtered.map((record) => {
+          const totalHours = record.checkIn !== '-' && record.checkOut !== '-'
+            ? `${parseInt(record.checkOut) - parseInt(record.checkIn)}j`
+            : '-';
+          return (
+            <tr key={record.id} className="hover:bg-slate-50 transition">
+              <td className="px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-emerald-400 to-cyan-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                    {record.employeeName.charAt(0)}
+                  </div>
+                  <span className="font-medium text-slate-800 truncate">{record.employeeName}</span>
+                </div>
+              </td>
+              <td className="px-4 py-3 text-slate-600">{record.date}</td>
+              <td className="px-4 py-3 text-slate-600 font-mono">{record.checkIn}</td>
+              <td className="px-4 py-3 text-slate-600 font-mono">{record.checkOut}</td>
+              <td className="px-4 py-3 text-slate-700 font-medium">{totalHours}</td>
+              <td className="px-4 py-3">
+                <StatusBadge status={record.status} type="attendance" />
+              </td>
+              <td className="px-4 py-3 text-slate-500 text-xs">{record.notes || '-'}</td>
+            </tr>
+          );
+        })}
+      </Table>
     </div>
   );
 }

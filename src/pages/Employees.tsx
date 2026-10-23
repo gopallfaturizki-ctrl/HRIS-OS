@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Users, Download, Upload } from 'lucide-react';
 import { useStore } from '../store/StoreProvider';
 import { useToast } from '../components/Toast';
-import { PageHeader, StatusBadge, SearchFilter, ActionButtons } from '../components/ui';
+import { PageHeader, StatusBadge, SearchFilter, ActionButtons, Table } from '../components/ui';
 import EmployeeFormModal from '../components/EmployeeFormModal';
 
 export default function Employees() {
@@ -112,57 +112,46 @@ export default function Employees() {
 
       {/* Table View */}
       {viewMode === 'table' ? (
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-100">
-                <tr>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Karyawan</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">NIK</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Departemen</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Jabatan</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Tgl Bergabung</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((emp) => (
-                  <tr key={emp.id} className="border-b border-gray-50 hover:bg-gray-50/50">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-cyan-500 flex items-center justify-center text-white text-xs font-bold">
-                          {emp.name.charAt(0)}
-                        </div>
-                        <div>
-                          <p className="font-medium text-gray-800">{emp.name}</p>
-                          <p className="text-xs text-gray-500">{emp.email}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-gray-600 font-mono text-xs">{emp.nik}</td>
-                    <td className="px-4 py-3 text-gray-600">{emp.department}</td>
-                    <td className="px-4 py-3 text-gray-600">{emp.position}</td>
-                    <td className="px-4 py-3">
-                      <StatusBadge status={emp.status} type="employee" />
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">{new Date(emp.joinDate).toLocaleDateString('id-ID')}</td>
-                    <td className="px-4 py-3">
-                      <ActionButtons
-                        onView={() => showToast('info', 'Detail Karyawan', `Melihat detail ${emp.name}`)}
-                        onEdit={() => handleEdit(emp)}
-                        onDelete={() => handleDelete(emp)}
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <>
+          <Table
+            headers={['Karyawan', 'NIK', 'Departemen', 'Jabatan', 'Status', 'Tgl Bergabung', 'Aksi']}
+            isEmpty={filtered.length === 0}
+            emptyMessage="Tidak ada karyawan yang ditemukan"
+          >
+            {filtered.map((emp) => (
+              <tr key={emp.id} className="hover:bg-slate-50 transition">
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-cyan-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                      {emp.name.charAt(0)}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-medium text-slate-800 truncate">{emp.name}</p>
+                      <p className="text-xs text-slate-500 truncate">{emp.email}</p>
+                    </div>
+                  </div>
+                </td>
+                <td className="px-4 py-3 text-slate-600 font-mono text-xs">{emp.nik}</td>
+                <td className="px-4 py-3 text-slate-600">{emp.department}</td>
+                <td className="px-4 py-3 text-slate-600">{emp.position}</td>
+                <td className="px-4 py-3">
+                  <StatusBadge status={emp.status} type="employee" />
+                </td>
+                <td className="px-4 py-3 text-slate-600">{new Date(emp.joinDate).toLocaleDateString('id-ID')}</td>
+                <td className="px-4 py-3">
+                  <ActionButtons
+                    onView={() => showToast('info', 'Detail Karyawan', `Melihat detail ${emp.name}`)}
+                    onEdit={() => handleEdit(emp)}
+                    onDelete={() => handleDelete(emp)}
+                  />
+                </td>
+              </tr>
+            ))}
+          </Table>
+          <div className="mt-3 px-4 py-2 text-sm text-slate-500">
+            Menampilkan {filtered.length} dari {store.employees.length} karyawan
           </div>
-          <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between">
-            <p className="text-sm text-gray-500">Menampilkan {filtered.length} dari {store.employees.length} karyawan</p>
-          </div>
-        </div>
+        </>
       ) : (
         /* Card View */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

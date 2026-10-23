@@ -1,4 +1,4 @@
-import { Search, Filter, X } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 
 interface FilterOption {
   label: string;
@@ -28,16 +28,16 @@ export default function SearchFilter({
   const hasActiveFilters = searchValue || filters.some(f => f.value);
 
   return (
-    <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm mb-4">
+    <div className="bg-white rounded-xl p-4 border border-slate-200 mb-4">
       <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <div className="relative flex-1 min-w-0">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
             placeholder={searchPlaceholder}
             value={searchValue}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition"
+            className="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition"
           />
         </div>
         {filters.map((filter, idx) => (
@@ -45,7 +45,7 @@ export default function SearchFilter({
             key={idx}
             value={filter.value}
             onChange={(e) => filter.onChange(e.target.value)}
-            className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition"
+            className="px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition bg-white min-w-[140px]"
           >
             <option value="">{filter.placeholder || 'Semua'}</option>
             {filter.options.map(opt => (
@@ -56,7 +56,7 @@ export default function SearchFilter({
         {hasActiveFilters && onClear && (
           <button
             onClick={onClear}
-            className="flex items-center gap-1 px-3 py-2 text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition"
+            className="flex items-center justify-center gap-1 px-3 py-2 text-sm text-slate-600 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 transition"
           >
             <X size={14} />
             Reset

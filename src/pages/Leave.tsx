@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Calendar } from 'lucide-react';
 import { useStore } from '../store/StoreProvider';
 import { useToast } from '../components/Toast';
-import { PageHeader, StatCard, StatusBadge, SearchFilter, ActionButtons } from '../components/ui';
+import { PageHeader, StatCard, StatusBadge, SearchFilter, ActionButtons, Table } from '../components/ui';
 
 export default function Leave() {
   const store = useStore();
@@ -69,58 +69,44 @@ export default function Leave() {
       />
 
       {/* Table */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-100">
-              <tr>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Karyawan</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Tipe Cuti</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Periode</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Durasi</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Alasan</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Disetujui</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((leave) => (
-                <tr key={leave.id} className="border-b border-gray-50 hover:bg-gray-50/50">
-                  <td className="px-4 py-3 font-medium text-gray-800">{leave.employeeName}</td>
-                  <td className="px-4 py-3">
-                    <StatusBadge status={leave.type} type="leave" />
-                  </td>
-                  <td className="px-4 py-3 text-gray-600">{leave.startDate} - {leave.endDate}</td>
-                  <td className="px-4 py-3 text-gray-600">{leave.days} hari</td>
-                  <td className="px-4 py-3 text-gray-600 max-w-[200px] truncate">{leave.reason}</td>
-                  <td className="px-4 py-3">
-                    <StatusBadge status={leave.status} />
-                  </td>
-                  <td className="px-4 py-3 text-gray-600">{leave.approvedBy || '-'}</td>
-                  <td className="px-4 py-3">
-                    {leave.status === 'Pending' ? (
-                      <ActionButtons
-                        showApproveReject
-                        onApprove={() => {
-                          store.approveLeave(leave.id);
-                          showToast('success', 'Cuti Disetujui', `${leave.employeeName} - ${leave.type}`);
-                        }}
-                        onReject={() => {
-                          store.rejectLeave(leave.id);
-                          showToast('error', 'Cuti Ditolak', `${leave.employeeName} - ${leave.type}`);
-                        }}
-                      />
-                    ) : (
-                      <span className="text-xs text-gray-400">-</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <Table
+        headers={['Karyawan', 'Tipe Cuti', 'Periode', 'Durasi', 'Alasan', 'Status', 'Disetujui', 'Aksi']}
+        isEmpty={filtered.length === 0}
+        emptyMessage="Tidak ada pengajuan cuti"
+      >
+        {filtered.map((leave) => (
+          <tr key={leave.id} className="hover:bg-slate-50 transition">
+            <td className="px-4 py-3 font-medium text-slate-800">{leave.employeeName}</td>
+            <td className="px-4 py-3">
+              <StatusBadge status={leave.type} type="leave" />
+            </td>
+            <td className="px-4 py-3 text-slate-600">{leave.startDate} - {leave.endDate}</td>
+            <td className="px-4 py-3 text-slate-600">{leave.days} hari</td>
+            <td className="px-4 py-3 text-slate-600 max-w-[200px] truncate">{leave.reason}</td>
+            <td className="px-4 py-3">
+              <StatusBadge status={leave.status} />
+            </td>
+            <td className="px-4 py-3 text-slate-600">{leave.approvedBy || '-'}</td>
+            <td className="px-4 py-3">
+              {leave.status === 'Pending' ? (
+                <ActionButtons
+                  showApproveReject
+                  onApprove={() => {
+                    store.approveLeave(leave.id);
+                    showToast('success', 'Cuti Disetujui', `${leave.employeeName} - ${leave.type}`);
+                  }}
+                  onReject={() => {
+                    store.rejectLeave(leave.id);
+                    showToast('error', 'Cuti Ditolak', `${leave.employeeName} - ${leave.type}`);
+                  }}
+                />
+              ) : (
+                <span className="text-xs text-slate-400">-</span>
+              )}
+            </td>
+          </tr>
+        ))}
+      </Table>
     </div>
   );
 }
