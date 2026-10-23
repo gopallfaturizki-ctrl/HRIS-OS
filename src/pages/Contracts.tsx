@@ -1,11 +1,61 @@
-import { FileText, AlertCircle, CheckCircle, Clock } from 'lucide-react';
-import { useStore } from '../store/StoreProvider';
+import { useState } from 'react';
+import { FileText, AlertCircle, CheckCircle, Clock, Trash2 } from 'lucide-react';
+import { useStore, ContractRecord } from '../store/StoreProvider';
 import { useToast } from '../components/Toast';
 import { PageHeader, StatCard, StatusBadge, Table } from '../components/ui';
+import Modal from '../components/Modal';
 
 export default function Contracts() {
   const store = useStore();
   const { showToast } = useToast();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const [formData, setFormData] = useState({
+    employeeId: '',
+    type: 'PKWT' as ContractRecord['type'],
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: '',
+  });
+
+  const handleAddContract = () => {
+    if (!formData.employeeId || !formData.startDate) {
+      showToast('error', 'Data Tidak Lengkap', 'Harap isi semua field yang wajib');
+      return;
+    }
+
+    const employee = store.employees.find(e => e.id === formData.employeeId);
+    if (!employee) {
+      showToast('error', 'Karyawan Tidak Ditemukan', 'Pilih karyawan yang valid');
+      return;
+    }
+
+    const newContract: ContractRecord = {
+      id: String(Date.now()),
+      employeeId: formData.employeeId,
+      employeeName: employee.name,
+      type: formData.type,
+      startDate: formData.startDate,
+      endDate: formData.endDate || '-',
+      status: 'Aktif',
+    };
+
+    store.addContract(newContract);
+    showToast('success', 'Kontrak Dibuat', `${employee.name} - ${formData.type}`);
+    setIsModalOpen(false);
+    setFormData({
+      employeeId: '',
+      type: 'PKWT',
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: '',
+    });
+  };
+
+  const handleDelete = (contract: ContractRecord) => {
+    if (confirm(`Hapus kontrak ${contract.employeeName}?`)) {
+      store.deleteContract(contract.id);
+      showToast('success', 'Kontrak Dihapus', `${contract.employeeName} telah dihapus`);
+    }
+  };
 
   return (
     <div>
@@ -14,7 +64,7 @@ export default function Contracts() {
         subtitle="Kelola kontrak kerja karyawan"
         icon={<FileText size={20} />}
         actionLabel="Buat Kontrak"
-        onAction={() => showToast('info', 'Buat Kontrak', 'Form kontrak akan segera tersedia')}
+        onAction={() => setIsModalOpen(true)}
       />
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
@@ -72,12 +122,6 @@ export default function Contracts() {
               </td>
               <td className="px-4 py-3">
                 <div className="flex gap-1.5">
-                  <button
-                    onClick={() => showToast('info', 'Detail Kontrak', `Melihat detail kontrak ${contract.employeeName}`)}
-                    className="px-2.5 py-1 text-xs font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 transition"
-                  >
-                    Detail
-                  </button>
                   {contract.status === 'Akan Berakhir' && (
                     <button
                       onClick={() => {
@@ -89,12 +133,84 @@ export default function Contracts() {
                       Perpanjang
                     </button>
                   )}
+                  <button
+                    onClick={() => handleDelete(contract)}
+                    className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition"
+                  >
+                    <Trash2 size={14} />
+                  </button>
                 </div>
               </td>
             </tr>
           );
         })}
       </Table>
+
+      {/* Buat Kontrak Modal */}
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Buat Kontrak Baru" size="md">
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Karyawan *</label>
+            <select
+              value={formData.employeeId}
+              onChange={(e) => setFormData({ ...formData, employeeId: e.target.value })}
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+            >
+              <option value="">Pilih Karyawan</option>
+              {store.employees.map(emp => (
+                <option key={emp.id} value={emp.id}>{emp.name} - {emp.nik}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Tipe Kontrak *</label>
+            <select
+              value={formData.type}
+              onChange={(e) => setFormData({ ...formData, type: e.target.value as ContractRecord['type'] })}
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+            >
+              <option value="PKWT">PKWT (Kontrak)</option>
+              <option value="PKWTT">PKWTT (Tetap)</option>
+              <option value="Magang">Magang</option>
+            </select>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Tanggal Mulai *</label>
+              <input
+                type="date"
+                value={formData.startDate}
+                onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Tanggal Berakhir</label>
+              <input
+                type="date"
+                value={formData.endDate}
+                onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+              />
+              <p className="text-xs text-slate-500 mt-1">Kosongkan jika kontrak tidak terbatas</p>
+            </div>
+          </div>
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
+            <button
+              onClick={() => setIsModalOpen(false)}
+              className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50"
+            >
+              Batal
+            </button>
+            <button
+              onClick={handleAddContract}
+              className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700"
+            >
+              Buat Kontrak
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

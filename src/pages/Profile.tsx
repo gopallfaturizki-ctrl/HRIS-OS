@@ -80,7 +80,18 @@ export default function Profile() {
                 {profile.name.charAt(0).toUpperCase()}
               </div>
               <button
-                onClick={() => showToast('info', 'Upload Foto', 'Fitur upload foto akan segera tersedia')}
+                onClick={() => {
+                  const input = document.createElement('input');
+                  input.type = 'file';
+                  input.accept = 'image/*';
+                  input.onchange = (e) => {
+                    const file = (e.target as HTMLInputElement).files?.[0];
+                    if (file) {
+                      showToast('success', 'Foto Diupload', `Foto profil berhasil diperbarui (simulasi)`);
+                    }
+                  };
+                  input.click();
+                }}
                 className="absolute bottom-0 right-0 p-2 bg-emerald-600 text-white rounded-full shadow-lg hover:bg-emerald-700 transition"
               >
                 <Camera size={14} />

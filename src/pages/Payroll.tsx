@@ -1,14 +1,26 @@
 import { useState } from 'react';
 import { DollarSign, Download, FileText, Printer } from 'lucide-react';
-import { useStore } from '../store/StoreProvider';
+import { useStore, PayrollRecord } from '../store/StoreProvider';
 import { useToast } from '../components/Toast';
 import { PageHeader, StatCard, StatusBadge, SearchFilter, Table } from '../components/ui';
+import Modal from '../components/Modal';
 
 export default function Payroll() {
   const store = useStore();
   const { showToast } = useToast();
   const [filterStatus, setFilterStatus] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const selectedPeriod = 'Januari 2024';
+
+  const [formData, setFormData] = useState({
+    employeeId: '',
+    period: selectedPeriod,
+    basicSalary: 0,
+    allowances: 0,
+    overtime: 0,
+    deductions: 0,
+    tax: 0,
+  });
 
   const filtered = store.payroll.filter(r => !filterStatus || r.status === filterStatus);
   const totalPayroll = store.payroll.reduce((sum, r) => sum + r.netSalary, 0);
@@ -20,6 +32,76 @@ export default function Payroll() {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
   };
 
+  const handleAddPayroll = () => {
+    if (!formData.employeeId || !formData.period) {
+      showToast('error', 'Data Tidak Lengkap', 'Harap isi semua field yang wajib');
+      return;
+    }
+
+    const employee = store.employees.find(e => e.id === formData.employeeId);
+    if (!employee) {
+      showToast('error', 'Karyawan Tidak Ditemukan', 'Pilih karyawan yang valid');
+      return;
+    }
+
+    const netSalary = formData.basicSalary + formData.allowances + formData.overtime - formData.deductions - formData.tax;
+
+    const newPayroll: PayrollRecord = {
+      id: String(Date.now()),
+      employeeId: formData.employeeId,
+      employeeName: employee.name,
+      period: formData.period,
+      basicSalary: formData.basicSalary,
+      allowances: formData.allowances,
+      overtime: formData.overtime,
+      deductions: formData.deductions,
+      tax: formData.tax,
+      netSalary,
+      status: 'Draft',
+    };
+
+    store.addPayroll(newPayroll);
+    showToast('success', 'Payroll Dibuat', `${employee.name} - ${formData.period}`);
+    setIsModalOpen(false);
+    setFormData({
+      employeeId: '',
+      period: selectedPeriod,
+      basicSalary: 0,
+      allowances: 0,
+      overtime: 0,
+      deductions: 0,
+      tax: 0,
+    });
+  };
+
+  const handleExportPayroll = () => {
+    const headers = ['Karyawan', 'Periode', 'Gaji Pokok', 'Tunjangan', 'Lembur', 'Potongan', 'Pajak', 'Gaji Bersih', 'Status'];
+    const rows = store.payroll.map(p => [
+      p.employeeName,
+      p.period,
+      p.basicSalary.toString(),
+      p.allowances.toString(),
+      p.overtime.toString(),
+      p.deductions.toString(),
+      p.tax.toString(),
+      p.netSalary.toString(),
+      p.status
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `payroll-${selectedPeriod.replace(' ', '-')}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+    showToast('success', 'Export Berhasil', 'File CSV telah diunduh');
+  };
+
   return (
     <div>
       <PageHeader
@@ -27,16 +109,16 @@ export default function Payroll() {
         subtitle={`Kelola penggajian karyawan - Periode: ${selectedPeriod}`}
         icon={<DollarSign size={20} />}
         actionLabel="Buat Payroll"
-        onAction={() => showToast('info', 'Buat Payroll', 'Form payroll akan segera tersedia')}
+        onAction={() => setIsModalOpen(true)}
       >
         <button
-          onClick={() => showToast('info', 'Cetak', 'Mencetak payroll...')}
+          onClick={() => window.print()}
           className="flex items-center gap-2 px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition"
         >
           <Printer size={16} /> Cetak
         </button>
         <button
-          onClick={() => showToast('info', 'Export', 'Export payroll...')}
+          onClick={handleExportPayroll}
           className="flex items-center gap-2 px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition"
         >
           <Download size={16} /> Export
@@ -132,6 +214,112 @@ export default function Payroll() {
           </div>
         </div>
       </div>
+
+      {/* Buat Payroll Modal */}
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Buat Payroll Baru" size="md">
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Karyawan *</label>
+            <select
+              value={formData.employeeId}
+              onChange={(e) => {
+                const emp = store.employees.find(emp => emp.id === e.target.value);
+                setFormData({ 
+                  ...formData, 
+                  employeeId: e.target.value,
+                  basicSalary: emp?.salary || 0
+                });
+              }}
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+            >
+              <option value="">Pilih Karyawan</option>
+              {store.employees.map(emp => (
+                <option key={emp.id} value={emp.id}>{emp.name} - {emp.nik}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Periode *</label>
+            <input
+              type="text"
+              value={formData.period}
+              onChange={(e) => setFormData({ ...formData, period: e.target.value })}
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+              placeholder="Contoh: Januari 2024"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Gaji Pokok (Rp)</label>
+              <input
+                type="number"
+                value={formData.basicSalary}
+                onChange={(e) => setFormData({ ...formData, basicSalary: parseInt(e.target.value) || 0 })}
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Tunjangan (Rp)</label>
+              <input
+                type="number"
+                value={formData.allowances}
+                onChange={(e) => setFormData({ ...formData, allowances: parseInt(e.target.value) || 0 })}
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Lembur (Rp)</label>
+              <input
+                type="number"
+                value={formData.overtime}
+                onChange={(e) => setFormData({ ...formData, overtime: parseInt(e.target.value) || 0 })}
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Potongan (Rp)</label>
+              <input
+                type="number"
+                value={formData.deductions}
+                onChange={(e) => setFormData({ ...formData, deductions: parseInt(e.target.value) || 0 })}
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Pajak (Rp)</label>
+              <input
+                type="number"
+                value={formData.tax}
+                onChange={(e) => setFormData({ ...formData, tax: parseInt(e.target.value) || 0 })}
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Gaji Bersih (Rp)</label>
+              <input
+                type="number"
+                value={formData.basicSalary + formData.allowances + formData.overtime - formData.deductions - formData.tax}
+                readOnly
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg bg-slate-50 text-slate-700 font-semibold"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
+            <button
+              onClick={() => setIsModalOpen(false)}
+              className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50"
+            >
+              Batal
+            </button>
+            <button
+              onClick={handleAddPayroll}
+              className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700"
+            >
+              Buat Payroll
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

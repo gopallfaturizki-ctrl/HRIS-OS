@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Clock, Download, Calendar } from 'lucide-react';
+import { Clock, Download, Calendar, Plus } from 'lucide-react';
 import { useStore } from '../store/StoreProvider';
 import { useToast } from '../components/Toast';
 import { PageHeader, StatCard, StatusBadge, SearchFilter, Table } from '../components/ui';
+import Modal from '../components/Modal';
 
 export default function Attendance() {
   const store = useStore();
@@ -10,12 +11,83 @@ export default function Attendance() {
   const [selectedDate, setSelectedDate] = useState('2024-01-15');
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const [formData, setFormData] = useState({
+    employeeId: '',
+    date: new Date().toISOString().split('T')[0],
+    checkIn: '08:00',
+    checkOut: '17:00',
+    status: 'Hadir' as 'Hadir' | 'Terlambat' | 'Izin' | 'Sakit' | 'Alpha',
+    notes: '',
+  });
 
   const filtered = store.attendance.filter(r => {
     const matchSearch = r.employeeName.toLowerCase().includes(search.toLowerCase());
     const matchStatus = !filterStatus || r.status === filterStatus;
     return matchSearch && matchStatus;
   });
+
+  const handleAddAttendance = () => {
+    if (!formData.employeeId || !formData.date) {
+      showToast('error', 'Data Tidak Lengkap', 'Harap isi semua field yang wajib');
+      return;
+    }
+
+    const employee = store.employees.find(e => e.id === formData.employeeId);
+    if (!employee) {
+      showToast('error', 'Karyawan Tidak Ditemukan', 'Pilih karyawan yang valid');
+      return;
+    }
+
+    const newAttendance = {
+      id: String(Date.now()),
+      employeeId: formData.employeeId,
+      employeeName: employee.name,
+      date: formData.date,
+      checkIn: formData.checkIn,
+      checkOut: formData.checkOut,
+      status: formData.status,
+      notes: formData.notes || undefined,
+    };
+
+    store.addAttendance(newAttendance);
+    showToast('success', 'Absensi Ditambahkan', `${employee.name} - ${formData.status}`);
+    setIsModalOpen(false);
+    setFormData({
+      employeeId: '',
+      date: new Date().toISOString().split('T')[0],
+      checkIn: '08:00',
+      checkOut: '17:00',
+      status: 'Hadir',
+      notes: '',
+    });
+  };
+
+  const handleExportCSV = () => {
+    const headers = ['Karyawan', 'Tanggal', 'Check In', 'Check Out', 'Status', 'Keterangan'];
+    const rows = store.attendance.map(a => [
+      a.employeeName,
+      a.date,
+      a.checkIn,
+      a.checkOut,
+      a.status,
+      a.notes || ''
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `absensi-${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+    showToast('success', 'Export Berhasil', 'File CSV telah diunduh');
+  };
 
   const summary = {
     hadir: store.attendance.filter(r => r.status === 'Hadir').length,
@@ -32,13 +104,13 @@ export default function Attendance() {
         subtitle="Monitoring kehadiran karyawan harian"
         icon={<Clock size={20} />}
         actionLabel="Input Absensi"
-        onAction={() => showToast('info', 'Input Absensi', 'Form input absensi akan segera tersedia')}
+        onAction={() => setIsModalOpen(true)}
       >
         <button
-          onClick={() => showToast('info', 'Export', 'Fitur export akan segera tersedia')}
+          onClick={handleExportCSV}
           className="flex items-center gap-2 px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition"
         >
-          <Download size={16} /> Export
+          <Download size={16} /> Export CSV
         </button>
       </PageHeader>
 
@@ -120,6 +192,92 @@ export default function Attendance() {
           );
         })}
       </Table>
+
+      {/* Input Absensi Modal */}
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Input Absensi" size="md">
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Karyawan *</label>
+            <select
+              value={formData.employeeId}
+              onChange={(e) => setFormData({ ...formData, employeeId: e.target.value })}
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+            >
+              <option value="">Pilih Karyawan</option>
+              {store.employees.map(emp => (
+                <option key={emp.id} value={emp.id}>{emp.name} - {emp.nik}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Tanggal *</label>
+            <input
+              type="date"
+              value={formData.date}
+              onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Check In</label>
+              <input
+                type="time"
+                value={formData.checkIn}
+                onChange={(e) => setFormData({ ...formData, checkIn: e.target.value })}
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Check Out</label>
+              <input
+                type="time"
+                value={formData.checkOut}
+                onChange={(e) => setFormData({ ...formData, checkOut: e.target.value })}
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Status *</label>
+            <select
+              value={formData.status}
+              onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+            >
+              <option value="Hadir">Hadir</option>
+              <option value="Terlambat">Terlambat</option>
+              <option value="Izin">Izin</option>
+              <option value="Sakit">Sakit</option>
+              <option value="Alpha">Alpha</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Keterangan</label>
+            <textarea
+              value={formData.notes}
+              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              rows={2}
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+              placeholder="Catatan tambahan (opsional)"
+            />
+          </div>
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
+            <button
+              onClick={() => setIsModalOpen(false)}
+              className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50"
+            >
+              Batal
+            </button>
+            <button
+              onClick={handleAddAttendance}
+              className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700"
+            >
+              Simpan Absensi
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

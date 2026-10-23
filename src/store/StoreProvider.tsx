@@ -64,6 +64,7 @@ interface StoreActions {
   addCandidate: (candidate: RecruitmentCandidate) => void;
 
   // Payroll actions
+  addPayroll: (payroll: PayrollRecord) => void;
   updatePayrollStatus: (id: string, status: PayrollRecord['status']) => void;
 
   // Contract actions
@@ -196,6 +197,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setState(s => ({ ...s, recruitment: [...s.recruitment, candidate] }));
   }, []);
 
+  const addPayroll = useCallback((payroll: PayrollRecord) => {
+    setState(s => ({ ...s, payroll: [...s.payroll, payroll] }));
+  }, []);
+
   const updatePayrollStatus = useCallback((id: string, status: PayrollRecord['status']) => {
     setState(s => ({
       ...s,
@@ -314,6 +319,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     updateCandidateStage,
     addCandidate,
     deleteCandidate,
+    addPayroll,
     updatePayrollStatus,
     extendContract,
     addContract,
