@@ -16,6 +16,9 @@ import Training from './pages/Training';
 import Discipline from './pages/Discipline';
 import Contracts from './pages/Contracts';
 import Resign from './pages/Resign';
+import Reports from './pages/Reports';
+import Profile from './pages/Profile';
+import Settings from './pages/Settings';
 
 function App() {
   return (
@@ -38,6 +41,9 @@ function App() {
               <Route path="discipline" element={<Discipline />} />
               <Route path="contracts" element={<Contracts />} />
               <Route path="resign" element={<Resign />} />
+              <Route path="reports" element={<Reports />} />
+              <Route path="profile" element={<Profile />} />
+              <Route path="settings" element={<Settings />} />
             </Route>
           </Routes>
         </HashRouter>

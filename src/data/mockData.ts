@@ -235,3 +235,51 @@ export const dashboardStats = {
   monthlyPayroll: 68899500,
   attendanceRate: 92,
 };
+
+export interface ResignRecord {
+  id: string;
+  employeeId: string;
+  employeeName: string;
+  resignDate: string;
+  lastDay: string;
+  reason: string;
+  status: 'Proses' | 'Selesai';
+  handover: 'Sudah' | 'Belum';
+  notice: string;
+}
+
+export const resignRecords: ResignRecord[] = [
+  {
+    id: '1',
+    employeeId: '11',
+    employeeName: 'Rudi Hermawan',
+    resignDate: '2024-01-10',
+    lastDay: '2024-02-10',
+    reason: 'Pindah domisili',
+    status: 'Proses',
+    handover: 'Belum',
+    notice: '30 hari',
+  },
+  {
+    id: '2',
+    employeeId: '12',
+    employeeName: 'Diana Putri',
+    resignDate: '2023-12-15',
+    lastDay: '2024-01-15',
+    reason: 'Menikah',
+    status: 'Selesai',
+    handover: 'Sudah',
+    notice: '30 hari',
+  },
+  {
+    id: '3',
+    employeeId: '13',
+    employeeName: 'Agus Setiawan',
+    resignDate: '2023-11-20',
+    lastDay: '2023-12-20',
+    reason: 'Alasan pribadi',
+    status: 'Selesai',
+    handover: 'Sudah',
+    notice: '30 hari',
+  },
+];
